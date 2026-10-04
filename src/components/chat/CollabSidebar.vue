@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <!-- 协作侧栏（R14）：Team 状态区（roster 成员：角色色点+名称+状态）+
        告警列表（全级别，critical 高亮）。数据源：agents / chat（本组件只渲染，
@@ -30,8 +13,27 @@ limitations under the License.
       </div>
       <div v-for="a in agents.agents" :key="a.id" class="member-row">
         <i class="role-dot" :style="{ background: roleColor(a.role) }" />
-        <span class="member-name" :title="`${a.role} / ${a.mode}`">{{ a.id }}</span>
-        <span class="member-status" :title="a.activity || ''">
+        <el-tooltip
+          :content="`${a.role} / ${a.mode}`"
+          effect="dark"
+          :show-after="500"
+          placement="top"
+        >
+          <span class="member-name">{{ a.id }}</span>
+        </el-tooltip>
+        <el-tooltip
+          v-if="a.activity"
+          :content="a.activity"
+          effect="dark"
+          :show-after="500"
+          placement="top"
+        >
+          <span class="member-status">
+            <i class="status-dot" :style="{ background: statusMetaOf(a.status).color }" />
+            {{ statusMetaOf(a.status).label }}
+          </span>
+        </el-tooltip>
+        <span v-else class="member-status">
           <i class="status-dot" :style="{ background: statusMetaOf(a.status).color }" />
           {{ statusMetaOf(a.status).label }}
         </span>
@@ -50,7 +52,9 @@ limitations under the License.
           <span class="alert-agent">{{ al.agentName }}</span>
           <span class="alert-time">{{ formatTime(al.ts) }}</span>
         </div>
-        <div class="alert-text" :title="al.text">{{ al.text }}</div>
+        <el-tooltip :content="al.text" effect="dark" :show-after="500" placement="top">
+          <div class="alert-text">{{ al.text }}</div>
+        </el-tooltip>
       </div>
     </div>
   </aside>

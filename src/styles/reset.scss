@@ -1,0 +1,473 @@
+// styles/reset.scss
+@use 'sass:map';
+@use 'sass:math';
+
+// ========== 1. 覆盖 Element Plus 内置变量（修正语法错误） ==========
+@forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  // 自定义颜色变量（含 hover/active 梯度色）
+  $colors: (
+      primary: (
+        'base': #184cfc,
+        // 主色默认值
+        'light-3': #184cfc,
+        // 主色浅3度（hover 用）
+        'light-5': #668bf2,
+        // 主色浅5度（聚焦/边框 hover 用）
+        'dark-2': #1241e2,
+        // 主色深2度（选中/激活用）
+      ),
+      success: (
+        'base': #5ce28a,
+        'light-3': #7ee89f,
+        'light-5': #a0edb5,
+        'dark-2': #45c870
+      ),
+      danger: (
+        'base': #fc1818,
+        'light-3': #fc4a4a,
+        'light-5': #fc7c7c,
+        'dark-2': #e00e0e
+      ),
+      warning: (
+        'base': #ff9500,
+        'light-3': #ffa833,
+        'light-5': #ffbb66,
+        'dark-2': #e68600
+      ),
+      info: (
+        'base': #f6f6f6,
+        'light-3': #fff,
+        'light-5': #f6f8ff,
+        'dark-2': #f6f8ff
+      )
+    ),
+  // 自定义字体大小变量（移入 @forward 块内，修正语法）
+  $font-size: (
+      'extra-large': 20px,
+      'large': 18px,
+      'medium': 16px,
+      'normal': 14px,
+      // 全局默认字体大小
+      'small': 12px,
+      'extra-small': 10px
+    ),
+  // 自定义圆角变量（移入 @forward 块内，修正语法）
+  $border-radius: (
+      'base': 4px,
+      // 统一组件圆角
+      'small': 2px,
+      'large': 8px,
+      'extra-large': 16px,
+      '3xl': 32px,
+      '4xl': 40px
+    ),
+  // 按钮基础变量
+  $button: (
+      'primary-fill-hover': var(--el-color-primary-light-3),
+      // 主按钮 hover 背景
+      'primary-fill-active': var(--el-color-primary-dark-2),
+      // 主按钮激活/选中背景
+      'border-radius-base': 4px,
+      // 按钮圆角
+      'padding-horizontal': 16px,
+      // 按钮水平内边距
+      'padding-vertical': 8px,
+      // 按钮垂直内边距
+      'corner-shape': 'squircle'
+    )
+);
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  line-height: 1.5; // 解决 Element Plus 行高不一致
+}
+
+:root {
+  // 注意：Element Plus 主题色由 tokens.scss 的桥接变量统一提供（--el-color-primary 等），
+  // 这里不得再声明 EP 颜色变量，否则后加载的 reset 会覆盖 tokens 的品牌色。
+  --el-border-radius-base: 4px;
+  --el-border-radius-large: 12px;
+  --el-border-radius-medium: 16px;
+  --el-border-radius-extra-large: 32px;
+  --el-border-radius-3xl: 36px;
+  --el-border-radius-4xl: 40px;
+  // 设置间距变量
+  --el-custom-spacing-10: 10px;
+  --el-custom-spacing-20: 20px;
+  --el-custom-spacing-30: 30px;
+  --el-custom-spacing-40: 40px;
+  --el-custom-spacing-50: 50px;
+  --el-custom-spacing-60: 60px;
+  --el-custom-spacing-70: 70px;
+  --el-custom-spacing-80: 80px;
+  --el-custom-spacing-90: 90px;
+  --el-custom-spacing-100: 100px;
+}
+body {
+  font-family: var(--sf-font-family);
+  font-size: var(--el-font-size-normal); // 复用 Element Plus 字体变量
+  font-weight: 400;
+  color: var(--sf-text-primary);
+  margin: 0 !important;
+  padding: 0 !important;
+  background-color: var(--sf-bg-canvas);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+a {
+  color: var(--el-color-primary);
+  text-decoration: none;
+  &:hover {
+    color: var(--el-color-primary-light-3);
+  }
+  &:active {
+    color: var(--el-color-primary-dark-2);
+  }
+  &:focus {
+    outline: none;
+  }
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  outline: none;
+  border: none;
+  background: transparent;
+}
+
+button {
+  cursor: pointer;
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.clearfix::after {
+  content: '';
+  display: block;
+  clear: both;
+}
+
+// ========== 3. Element Plus 组件样式统一覆盖（合并重复的按钮样式） ==========
+:root {
+  // 自定义全局间距变量
+  --el-custom-spacing-xs: 4px;
+  --el-custom-spacing-sm: 8px;
+  --el-custom-spacing-md: 16px;
+  --el-custom-spacing-lg: 24px;
+  --el-custom-spacing-xl: 32px;
+  // 定义字体变量
+  --el-font-family: 'MiSans VF' !important;
+  --el-font-size-normal: 14px;
+  --el-font-size-medium: 16px;
+  --el-font-size-large: 18px;
+  --el-font-size-extra-large: 20px;
+  --font-size-14: 14px;
+  --font-size-16: 16px;
+  --font-size-18: 18px;
+  --font-size-20: 20px;
+}
+.el-form {
+  .el-input__inner {
+    background-color: transparent !important;
+  }
+  .el-input__wrapper,
+  .el-select__wrapper,
+  .el-textarea__inner {
+    box-shadow: 0 0 0 1px transparent inset !important;
+    width: 100% !important;
+  }
+  .is-error {
+    .el-input__wrapper,
+    .el-select__wrapper,
+    .el-textarea__inner {
+      background: rgba(252, 24, 24, 0.03) !important;
+      box-shadow:
+        35px 35px 14px 0 rgba(252, 24, 24, 0),
+        22px 22px 13px 0 rgba(252, 24, 24, 0.02),
+        13px 13px 11px 0 rgba(252, 24, 24, 0.06),
+        6px 6px 8px 0 rgba(252, 24, 24, 0.1),
+        1px 1px 4px 0 rgba(252, 24, 24, 0.12) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+    }
+  }
+  .is-focus {
+    background: rgba(25, 76, 252, 0.03) !important;
+    box-shadow:
+      35px 35px 14px 0 rgba(25, 76, 252, 0),
+      22px 22px 13px 0 rgba(25, 76, 252, 0.02),
+      13px 13px 11px 0 rgba(25, 76, 252, 0.06),
+      6px 6px 8px 0 rgba(25, 76, 252, 0.1),
+      1px 1px 4px 0 rgba(25, 76, 252, 0.12) !important;
+    backdrop-filter: blur(12px);
+  }
+  .el-form-item {
+    margin-bottom: 44px !important;
+    .el-form-item__error {
+      left: 10px !important;
+      top: calc(100% + 10px);
+      color: #fa2c19;
+    }
+  }
+}
+// 统一表单样式
+.el-input__inner {
+  background-color: transparent !important;
+}
+.el-input__wrapper,
+.el-select__wrapper,
+.el-textarea__inner {
+  box-shadow: 0 0 0 1px transparent inset;
+}
+.is-error {
+  .el-input__wrapper {
+    background: rgba(252, 24, 24, 0.03);
+    box-shadow:
+      35px 35px 14px 0 rgba(252, 24, 24, 0),
+      22px 22px 13px 0 rgba(252, 24, 24, 0.02),
+      13px 13px 11px 0 rgba(252, 24, 24, 0.06),
+      6px 6px 8px 0 rgba(252, 24, 24, 0.1),
+      1px 1px 4px 0 rgba(252, 24, 24, 0.12);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+.is-focus {
+  background: rgba(25, 76, 252, 0.03);
+  box-shadow:
+    35px 35px 14px 0 rgba(25, 76, 252, 0),
+    22px 22px 13px 0 rgba(25, 76, 252, 0.02),
+    13px 13px 11px 0 rgba(25, 76, 252, 0.06),
+    6px 6px 8px 0 rgba(25, 76, 252, 0.1),
+    1px 1px 4px 0 rgba(25, 76, 252, 0.12) !important;
+  backdrop-filter: blur(12px);
+}
+.el-form-item {
+  margin-bottom: 44px;
+  .el-form-item__error {
+    left: 50px;
+    top: calc(100% + 10px);
+    color: #fa2c19;
+  }
+}
+.el-input__wrapper,
+.el-select__wrapper {
+  height: 44px;
+  box-shadow: 0 0 0 1px transparent inset;
+  border-radius: 12px;
+  &:hover {
+    box-shadow:
+      35px 35px 14px 0 rgba(25, 76, 252, 0),
+      22px 22px 13px 0 rgba(25, 76, 252, 0.02),
+      13px 13px 11px 0 rgba(25, 76, 252, 0.06),
+      6px 6px 8px 0 rgba(25, 76, 252, 0.1),
+      1px 1px 4px 0 rgba(25, 76, 252, 0.12) !important;
+    backdrop-filter: blur(12px);
+  }
+
+  .el-input__inner {
+    width: 100%;
+    height: 40px;
+    border-radius: 24px;
+    background-color: var(--el-input-bg-color, var(--el-fill-color-blank));
+  }
+}
+// 统一多行文本域样式：与输入框同一皮肤语言
+.el-textarea__inner {
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: var(--el-input-text-color, var(--el-text-color-regular));
+  background-color: var(--el-input-bg-color, var(--el-fill-color-blank));
+  box-shadow: 0 0 0 1px transparent inset;
+  &:hover {
+    box-shadow:
+      35px 35px 14px 0 rgba(25, 76, 252, 0),
+      22px 22px 13px 0 rgba(25, 76, 252, 0.02),
+      13px 13px 11px 0 rgba(25, 76, 252, 0.06),
+      6px 6px 8px 0 rgba(25, 76, 252, 0.1),
+      1px 1px 4px 0 rgba(25, 76, 252, 0.12) !important;
+    backdrop-filter: blur(12px);
+  }
+  &:focus {
+    background: rgba(25, 76, 252, 0.03);
+    box-shadow:
+      35px 35px 14px 0 rgba(25, 76, 252, 0),
+      22px 22px 13px 0 rgba(25, 76, 252, 0.02),
+      13px 13px 11px 0 rgba(25, 76, 252, 0.06),
+      6px 6px 8px 0 rgba(25, 76, 252, 0.1),
+      1px 1px 4px 0 rgba(25, 76, 252, 0.12) !important;
+    backdrop-filter: blur(12px);
+  }
+}
+.is-focused {
+  background: rgba(25, 76, 252, 0.03);
+  box-shadow:
+    35px 35px 14px 0 rgba(25, 76, 252, 0),
+    22px 22px 13px 0 rgba(25, 76, 252, 0.02),
+    13px 13px 11px 0 rgba(25, 76, 252, 0.06),
+    6px 6px 8px 0 rgba(25, 76, 252, 0.1),
+    1px 1px 4px 0 rgba(25, 76, 252, 0.12) !important;
+  backdrop-filter: blur(12px);
+}
+// 统一输入框样式
+// .el-input__wrapper {
+//   border-radius: var(--el-border-radius-base) !important;
+//   &:hover {
+//     border-color: var(--el-color-primary-light-5) !important;
+//   }
+//   &:focus-within {
+//     border-color: var(--el-color-primary) !important;
+//   }
+// }
+
+// Toast 提示框
+.Toastify {
+  .Toastify__toast-container--top-center {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}
+
+// ============================================================
+// html.dark 深色模式整体适配
+// 浮层（select 下拉 / dropdown / popover）此前被统一为白色玻璃，
+// 这里在深色模式下切换为深玻璃，并修正硬编码浅色导致的低对比文字。
+// ============================================================
+html.dark {
+  // 弹窗：标题 / 提示文字使用主题色，避免深底深字看不清
+  .el-dialog__header {
+    color: var(--sf-text-primary) !important;
+  }
+  .el-dialog__headerbtn {
+    background: var(--sf-bg-tertiary) !important;
+    color: var(--sf-text-secondary) !important;
+    &:hover,
+    &:focus {
+      background: var(--sf-bg-hover) !important;
+      color: var(--sf-text-primary) !important;
+    }
+  }
+  .el-dialog__body {
+    .el-alert__title {
+      color: var(--sf-text-primary) !important;
+    }
+    .el-alert__description {
+      color: var(--sf-text-secondary) !important;
+    }
+  }
+
+  // 富内容浮层：select / dropdown / popover 统一深玻璃
+  $glass: rgba(21, 26, 45, 0.97);
+  .el-popper.el-select__popper,
+  .el-popper.el-dropdown__popper,
+  .el-popper.el-popover {
+    background: $glass !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
+    color: var(--sf-text-primary) !important;
+    > .el-popper__arrow::before {
+      background: $glass !important;
+    }
+    &[data-popper-placement^='bottom'] > .el-popper__arrow::before {
+      border-bottom-color: $glass !important;
+    }
+    &[data-popper-placement^='top'] > .el-popper__arrow::before {
+      border-top-color: $glass !important;
+    }
+    &[data-popper-placement^='left'] > .el-popper__arrow::before {
+      border-left-color: $glass !important;
+    }
+    &[data-popper-placement^='right'] > .el-popper__arrow::before {
+      border-right-color: $glass !important;
+    }
+  }
+
+  // select 下拉项：深底 + 亮字
+  .el-popper.el-select__popper {
+    .el-select-dropdown__item {
+      color: var(--sf-text-primary) !important;
+      &:hover,
+      &.is-hovering {
+        background: var(--sf-bg-hover) !important;
+      }
+    }
+  }
+
+  // dropdown 菜单：文本使用主题色（悬停蓝底白字沿用原样式，两主题下均可读）
+  .el-popper.el-dropdown__popper {
+    .el-dropdown-menu__item:not(.is-disabled) {
+      color: var(--sf-text-primary) !important;
+    }
+  }
+
+  // 次要按钮（default）：深色模式避免整块白色按钮
+  .el-button.el-button--default:not(.is-disabled) {
+    background-color: var(--sf-bg-tertiary) !important;
+    border-color: var(--sf-border-light) !important;
+    color: var(--sf-text-primary) !important;
+    box-shadow: none !important;
+    &:hover,
+    &:focus {
+      background-color: var(--sf-bg-hover) !important;
+      border-color: var(--sf-border) !important;
+      color: var(--sf-text-primary) !important;
+    }
+    &:active {
+      background-color: var(--sf-bg-hover) !important;
+      border-color: var(--sf-border) !important;
+    }
+  }
+  .el-button.el-button--default.is-disabled {
+    background-color: var(--sf-bg-tertiary) !important;
+    border-color: transparent !important;
+    color: var(--sf-text-disabled) !important;
+  }
+
+  // 危险 text/link 按钮（如“移除期望”）：深色模式换深红玻璃
+  .el-button.is-text.el-button--danger:not(.is-disabled),
+  .el-button.is-link.el-button--danger:not(.is-disabled) {
+    background-color: rgba(252, 24, 24, 0.12) !important;
+    border-color: rgba(252, 24, 24, 0.38) !important;
+    color: #ff8080 !important;
+    &:hover,
+    &:focus {
+      background-color: rgba(252, 24, 24, 0.22) !important;
+      border-color: rgba(252, 24, 24, 0.55) !important;
+      color: #ffa0a0 !important;
+    }
+    &:active {
+      background-color: rgba(252, 24, 24, 0.3) !important;
+      border-color: rgba(252, 24, 24, 0.7) !important;
+      color: #ffb3b3 !important;
+    }
+  }
+}

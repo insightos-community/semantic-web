@@ -1,18 +1,3 @@
-// Copyright 2026 InsightOS
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
@@ -64,6 +49,19 @@ beforeEach(() => {
 afterEach(() => scope.stop())
 
 describe('Studio 运行证据', () => {
+  it('周期阶段反馈保留进入时间并恢复历史阶段顺序', () => {
+    const robots = useRobotStore()
+    robots.hydrate('p1', [{...execution, stages: [{id:'execute_policy', name:'execute_policy', started_at:'2026-09-10T12:02:00Z'}]}])
+    const stage = (sequence, name, at, summary) => ({execution_id:'rex-1', sequence, type:'stage.running', created_at:at, payload:{stage:name,summary}})
+    robots.appendExecutionEvent('rex-1', stage(1,'validate_target','2026-09-10T12:00:00Z','确认目标'))
+    robots.appendExecutionEvent('rex-1', stage(2,'prepare','2026-09-10T12:00:01Z','准备'))
+    robots.appendExecutionEvent('rex-1', stage(3,'execute_policy','2026-09-10T12:00:02Z','开始执行'))
+    robots.appendExecutionEvent('rex-1', stage(4,'execute_policy','2026-09-10T12:03:00Z','已执行 10 个动作 · 等待模型输出'))
+    const stages = robots.byId('rex-1').stages
+    expect(stages.map(s=>s.name)).toEqual(['validate_target','prepare','execute_policy'])
+    expect(stages[2].started_at).toBe('2026-09-10T12:00:02Z')
+    expect(stages[2].observation).toContain('已执行 10 个动作')
+  })
   it('同 Stage 的 Pilot / Server 引用去重，后续判断引用不改变 sensor.frame 拍摄归属', () => {
     const local = 'pilot-artifact://pilot-1/local-rgb'
     const formal = 'artifact://rgb-server'

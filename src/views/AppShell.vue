@@ -1,26 +1,11 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <div class="app-shell">
     <!-- 顶栏：品牌 + 面包屑（随路由）+ 右侧动作区（组件健康点 / 当前用户） -->
     <header class="shell-topbar">
       <div class="topbar-left">
-        <span class="brand"><span class="brand-mark">S</span>Semantic Studio</span>
+        <span class="brand"
+          ><img src="/logo-whale.svg" alt="" class="brand-mark" />Semantic Studio</span
+        >
         <nav class="breadcrumb" aria-label="当前位置">
           <template v-for="(crumb, i) in breadcrumbs" :key="crumb">
             <span v-if="i > 0">/</span>
@@ -32,9 +17,11 @@ limitations under the License.
         <span class="environment-chip">LOCAL WORKSPACE</span>
       </div>
       <div class="topbar-right">
-        <span class="health-chip" :title="healthTitle">
-          <i class="sf-status-dot" :data-status="health.status" />组件健康 · {{ health.text }}
-        </span>
+        <el-tooltip effect="dark" :show-after="500" :content="healthTitle" placement="bottom">
+          <span class="health-chip">
+            <i class="sf-status-dot" :data-status="health.status" />组件健康 · {{ health.text }}
+          </span>
+        </el-tooltip>
         <span class="user-entry">{{ session.userName }}</span>
       </div>
     </header>
@@ -46,8 +33,10 @@ limitations under the License.
           <el-tooltip
             v-for="item in navItems"
             :key="item.path"
+            effect="dark"
             :content="item.title"
             placement="right"
+            :show-after="500"
             :disabled="!ui.sidebarCollapsed"
           >
             <button
@@ -64,10 +53,20 @@ limitations under the License.
 
         <!-- 底部次导航：帮助占位 + 收起切换（184↔72）+ 用户卡片（退出 popover） -->
         <div class="nav-footer">
-          <button type="button" class="nav-item" title="帮助（待开放）" disabled>
-            <el-icon class="nav-icon"><QuestionFilled /></el-icon>
-            <span v-show="!ui.sidebarCollapsed">帮助</span>
-          </button>
+          <el-tooltip
+            effect="dark"
+            :show-after="500"
+            content="帮助（待开放）"
+            placement="right"
+            :disabled="!ui.sidebarCollapsed"
+          >
+            <span class="tooltip-reference">
+              <button type="button" class="nav-item" disabled>
+                <el-icon class="nav-icon"><QuestionFilled /></el-icon>
+                <span v-show="!ui.sidebarCollapsed">帮助</span>
+              </button>
+            </span>
+          </el-tooltip>
           <button type="button" class="nav-item collapse-toggle" @click="ui.toggleSidebar()">
             <el-icon class="nav-icon">
               <component :is="ui.sidebarCollapsed ? Expand : Fold" />
@@ -82,7 +81,9 @@ limitations under the License.
               </button>
             </template>
             <div class="user-pop-name">{{ session.userName }}</div>
-            <el-button size="small" @click="onLogout">退出登录</el-button>
+            <el-button class="user-popover-action" size="small" @click="onLogout">
+              退出登录
+            </el-button>
           </el-popover>
         </div>
       </aside>
@@ -178,25 +179,21 @@ async function onLogout() {
 .brand {
   gap: var(--sf-space-2);
   font-size: var(--sf-font-lg);
-  font-weight: 700;
+  font-weight: 630;
   color: var(--sf-text-primary);
 }
 
 .brand-mark {
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  background: linear-gradient(145deg, #4777ff, #284fd9);
-  color: #fff;
-  font-size: var(--sf-font-md);
-  box-shadow: 0 6px 14px rgba(49, 92, 236, 0.24);
+  display: inline-block;
+  width: 36px;
+  height: auto;
+  vertical-align: middle;
 }
 
 .breadcrumb,
 .health-chip {
   padding: 5px 9px;
-  border: 1px solid var(--sf-border-light);
+  border: 0;
   border-radius: 999px;
   background: var(--sf-bg-tertiary);
   gap: var(--sf-space-2);
@@ -206,11 +203,11 @@ async function onLogout() {
 
 .environment-chip {
   padding: 3px 7px;
-  border: 1px solid var(--sf-border-light);
-  border-radius: 5px;
+  border: 0;
+  border-radius: 6px;
   color: var(--sf-text-disabled);
-  font-size: 9px;
-  font-weight: 650;
+  font-size: 11px;
+  font-weight: 380;
   letter-spacing: 0.08em;
 }
 
@@ -232,49 +229,63 @@ async function onLogout() {
 .shell-nav {
   display: flex;
   flex-direction: column;
-  width: 78px;
+  width: 200px;
   flex: none;
-  padding: 9px 7px;
-  background: color-mix(in srgb, var(--sf-bg-tertiary) 72%, var(--sf-bg-secondary));
-  border-right: 1px solid var(--sf-border-light);
+  padding: 10px 8px;
+  background: var(--sf-bg-secondary);
+  border-right: 0;
+  box-shadow: 1px 0 0 var(--sf-border-light);
   transition: width 0.2s ease;
 
   &.is-collapsed {
-    width: 54px;
+    width: 64px;
 
     .nav-item {
       justify-content: center;
+      gap: 0;
       padding: 0;
     }
   }
 }
 
-.nav-list,
-.nav-footer {
+.nav-list {
   display: flex;
   flex-direction: column;
-  gap: var(--sf-space-1);
+  gap: 10px;
 }
 
 .nav-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   margin-top: auto;
   padding-top: var(--sf-space-2);
-  border-top: 1px solid var(--sf-border-light);
+  border-top: 0;
+
+  .tooltip-reference {
+    display: flex;
+    width: 100%;
+
+    .nav-item {
+      flex: 1;
+    }
+  }
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-  height: 52px;
-  padding: 0 4px;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 10px;
+  height: 36px;
+  padding: 0 10px;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
   color: var(--sf-text-secondary);
-  font-size: 10px;
+  font-size: 13px;
+  font-weight: 380;
   white-space: nowrap;
   cursor: pointer;
 
@@ -284,10 +295,10 @@ async function onLogout() {
   }
 
   &.is-active {
-    background: var(--sf-brand-soft);
-    color: var(--sf-brand);
-    font-weight: 600;
-    box-shadow: inset 2px 0 0 var(--sf-brand);
+    background: linear-gradient(135deg, var(--sf-brand) 0%, var(--sf-brand-active) 100%);
+    color: #fff;
+    font-weight: 520;
+    box-shadow: none;
   }
 
   &:disabled {
@@ -302,9 +313,9 @@ async function onLogout() {
   height: 28px;
   flex: none;
   border-radius: 50%;
-  background: linear-gradient(145deg, var(--sf-brand), #6f86ec);
+  background: linear-gradient(135deg, #0253fd 0%, #0231ae 50%, #021976 100%);
   color: #fff;
-  font-weight: 600;
+  font-weight: 520;
 }
 
 .nav-icon {
@@ -319,8 +330,23 @@ async function onLogout() {
 
 .user-pop-name {
   margin-bottom: var(--sf-space-2);
-  font-weight: 600;
   color: var(--sf-text-primary);
+  font-weight: 520;
+}
+
+.user-popover-action {
+  width: 100%;
+  border: none;
+  border-radius: 6px;
+  background: var(--sf-bg-tertiary);
+  color: var(--sf-text-primary);
+  font-weight: 520;
+}
+
+.user-popover-action:hover,
+.user-popover-action:focus-visible {
+  background: var(--sf-bg-hover);
+  color: var(--sf-brand);
 }
 
 .shell-main {

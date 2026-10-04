@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <section class="workflow-run">
     <header v-if="currentWorkflow">
@@ -167,6 +150,7 @@ limitations under the License.
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { confirmWorkflowStop } from '@/studio/confirmWorkflowStop'
+import { stopWorkflowFromUI } from '@/studio/stopWorkflow'
 import { useLayoutStore } from '@/stores/layout'
 import { useUiStore } from '@/stores/ui'
 import { useWorkflowStore, workflowStopMode } from '@/stores/workflow'
@@ -221,10 +205,10 @@ function openExecutionRecords() {
 }
 const stopMode = computed(() => workflowStopMode(currentWorkflow.value))
 const executionStateUnknown = computed(() => stopMode.value === 'unknown')
-const canRetryStop = computed(() => stopMode.value !== 'readonly')
-const stopButtonLabel = computed(() =>
-  ['retry', 'unknown'].includes(stopMode.value) ? '重试停止' : '停止 Workflow'
-)
+// 物理状态未知时普通 stop 一定会被安全策略退回，重试停止没有意义：面板只保留
+// 「确认现场安全并终结」这一条真实出口。
+const canRetryStop = computed(() => ['stop', 'retry'].includes(stopMode.value))
+const stopButtonLabel = computed(() => (stopMode.value === 'retry' ? '重试停止' : '停止 Workflow'))
 const workflowStatusLabel = computed(() =>
   executionStateUnknown.value ? '执行状态未知' : statusLabel(currentWorkflow.value?.status)
 )
@@ -333,11 +317,9 @@ async function handleWaitingAction(action) {
 }
 
 async function stopWorkflow() {
-  try {
-    await workflow.transitionById(currentWorkflow.value.id, 'stop')
-  } catch (error) {
-    ui.notify({ type: 'error', message: workflow.error || error.message || 'Workflow 停止失败' })
-  }
+  await stopWorkflowFromUI(workflow, ui, currentWorkflow.value.id, tasks.value, {
+    view: selectedView.value
+  })
 }
 
 async function confirmSafeStop() {
@@ -414,8 +396,8 @@ function dot(status) {
 .workflow-run > header span,
 .section-heading span {
   color: var(--sf-brand);
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 380;
   letter-spacing: 0.1em;
 }
 h1,
@@ -540,7 +522,7 @@ h1 {
   border-radius: 50%;
   background: var(--sf-brand-soft);
   color: var(--sf-brand);
-  font-weight: 800;
+  font-weight: 520;
 }
 .node-main {
   display: flex;
@@ -563,7 +545,7 @@ h1 {
 .node-main small,
 .node-status {
   color: var(--sf-text-disabled);
-  font-size: 9px;
+  font-size: 11px;
 }
 .task-meta {
   display: grid;
@@ -586,7 +568,7 @@ h1 {
 }
 .task-meta span {
   color: var(--sf-text-disabled);
-  font-size: 9px;
+  font-size: 11px;
 }
 .task-meta b {
   overflow: hidden;
@@ -642,7 +624,7 @@ h1 {
 }
 .subtask-todo code {
   color: var(--sf-brand);
-  font-size: 9px;
+  font-size: 11px;
 }
 .todo-check {
   width: 13px;

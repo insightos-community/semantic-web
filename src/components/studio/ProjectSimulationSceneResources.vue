@@ -1,33 +1,13 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <section class="simulation-resources" data-testid="project-simulation-scenes">
     <div class="section-heading">
       <h3>项目场景</h3>
-      <button
-        type="button"
-        title="从全局目录添加兼容场景"
-        data-testid="open-scene-catalog"
-        @click="openCatalog"
-      >
-        <Plus />
-        添加
-      </button>
+      <el-tooltip content="从全局目录添加兼容场景" effect="dark" :show-after="500" placement="top">
+        <button type="button" data-testid="open-scene-catalog" @click="openCatalog">
+          <Plus />
+          添加
+        </button>
+      </el-tooltip>
     </div>
 
     <div class="scene-service-state">
@@ -63,26 +43,37 @@ limitations under the License.
       </template>
     </div>
 
-    <button
+    <div
       v-for="reference in store.projectScenes"
       :key="reference.project_scene_id"
-      type="button"
       class="resource-row"
+      role="button"
+      tabindex="0"
       @click="openScene(reference)"
+      @keydown.enter="openScene(reference)"
     >
       <ResourceThumbnail
         :src="sceneFor(reference)?.preview"
         :alt="(sceneFor(reference)?.name || reference.catalog_scene_id) + ' 场景预览'"
       />
       <span>
-        <b>{{ sceneFor(reference)?.name || reference.catalog_scene_id }}</b>
+        <b :title="sceneFor(reference)?.name">{{
+          sceneFor(reference)?.name || reference.catalog_scene_id
+        }}</b>
         <small>
-          {{ sceneFor(reference)?.engine }} / {{ sceneFor(reference)?.loader }} ·
+          {{ reference.catalog_scene_id }} ·
           {{ variantName(reference) }}
         </small>
       </span>
       <ArrowRight />
-    </button>
+      <el-button
+        v-if="project.currentProject?.mode === 'development'"
+        size="small"
+        text
+        @click.stop="removeScene(reference)"
+        >移除</el-button
+      >
+    </div>
     <div v-if="!store.projectScenes.length" class="empty-scene-state">
       <p class="empty-note">尚未添加场景</p>
       <el-button
@@ -106,17 +97,26 @@ limitations under the License.
             <small>{{ scene.layouts.length }} 个 Layout · {{ scene.statusLabel }}</small>
           </button>
           <div class="scene-actions">
-            <button type="button" title="复制当前 Project Layout" @click="createLayout(scene)">
-              复制 Layout
-            </button>
-            <button
-              type="button"
-              title="导出全部已发布 Layout"
-              :disabled="!scene.hasPublished"
-              @click="exportPackage(scene)"
+            <el-tooltip
+              content="复制当前 Project Layout"
+              effect="dark"
+              :show-after="500"
+              placement="top"
             >
-              导出
-            </button>
+              <button type="button" @click="createLayout(scene)">复制 Layout</button>
+            </el-tooltip>
+            <el-tooltip
+              content="导出全部已发布 Layout"
+              effect="dark"
+              :show-after="500"
+              placement="top"
+            >
+              <span class="tooltip-reference">
+                <button type="button" :disabled="!scene.hasPublished" @click="exportPackage(scene)">
+                  导出
+                </button>
+              </span>
+            </el-tooltip>
           </div>
         </header>
         <div v-for="layoutItem in scene.layouts" :key="layoutItem.layoutId" class="layout-row">
@@ -155,38 +155,21 @@ limitations under the License.
       <p v-if="!documentScenes.length" class="empty-note">尚无自定义 Layout</p>
     </details>
 
-    <el-dialog v-model="catalogOpen" title="添加兼容场景" width="660px" append-to-body>
+    <el-dialog v-model="catalogOpen" title="添加兼容场景" width="min(1040px, 94vw)" append-to-body>
       <el-alert
         v-if="!compatibleCatalog.length"
         title="当前 Project Runtime 没有兼容的目录场景"
         type="info"
         :closable="false"
       />
-      <button
-        v-for="scene in compatibleCatalog"
-        :key="scene.scene_id"
-        type="button"
-        class="catalog-row"
-        :class="{ selected: selectedSceneId === scene.scene_id }"
-        @click="selectCatalogScene(scene)"
-      >
-        <img
-          v-if="scene.preview"
-          class="catalog-thumbnail"
-          :src="scene.preview"
-          :alt="`${scene.name} 场景预览`"
-        />
-        <div>
-          <b>{{ scene.name }}</b>
-          <span>{{ scene.description }}</span>
-          <small>{{ scene.engine }} / {{ scene.loader }} · {{ scene.source }}</small>
-        </div>
-        <el-tag size="small">
-          {{
-            scene.versions?.[0]?.authoring?.mode === 'layout_only' ? '可派生 Layout' : '只读环境'
-          }}
-        </el-tag>
-      </button>
+      <SceneBrowser
+        :scenes="compatibleCatalog"
+        :model-value="selectedSceneId"
+        @select="selectCatalogScene"
+      />
+      <p v-if="selectedScene" class="catalog-selection">
+        <b>当前选择：</b>{{ selectedScene.name }}
+      </p>
       <el-form v-if="selectedScene" label-position="top" class="catalog-form">
         <el-form-item label="发布版本">
           <el-select v-model="selectedVersion">
@@ -221,6 +204,7 @@ limitations under the License.
 
 <script setup>
 import DeviceStatus from '@/components/device/DeviceStatus.vue'
+import SceneBrowser from '@/components/simulation/SceneBrowser.vue'
 import { computed, ref } from 'vue'
 import { ArrowRight, EditPen, Plus } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
@@ -228,11 +212,14 @@ import ResourceThumbnail from '@/components/studio/ResourceThumbnail.vue'
 import { useLayoutStore } from '@/stores/layout'
 import { useSimulationStore } from '@/stores/simulation'
 import { useUiStore } from '@/stores/ui'
+import { useProjectStore } from '@/stores/project'
 import { openStudioPanel } from '@/studio/panelService'
+import { removeProjectScene } from '@/api/simulation'
 
 const store = useSimulationStore()
 const layout = useLayoutStore()
 const ui = useUiStore()
+const project = useProjectStore()
 const profileId = ref('')
 const editingProfile = ref(false)
 const catalogOpen = ref(false)
@@ -346,9 +333,6 @@ async function openCatalog() {
     })
   }
   catalogOpen.value = true
-  if (!selectedScene.value && compatibleCatalog.value[0]) {
-    selectCatalogScene(compatibleCatalog.value[0])
-  }
 }
 
 function editProfile() {
@@ -378,6 +362,22 @@ async function addScene() {
     openScene(reference)
   } catch (error) {
     ui.notify({ type: 'error', message: error.message || '添加场景失败' })
+  }
+}
+
+async function removeScene(reference) {
+  try {
+    await ElMessageBox.confirm('移除此项目的场景引用？已安装场景包和历史记录会保留。', '移除场景', {
+      type: 'warning'
+    })
+  } catch {
+    return
+  }
+  try {
+    await removeProjectScene(store.projectId, reference.project_scene_id)
+    await store.hydrate(store.projectId)
+  } catch (error) {
+    ui.notify({ type: 'error', message: error.message || '移除场景失败' })
   }
 }
 
@@ -495,7 +495,7 @@ function openDocument(document) {
   border-radius: 8px;
   background: var(--sf-bg-secondary);
   color: var(--sf-text-secondary);
-  font-size: 10px;
+  font-size: 11px;
 }
 .profile-card b {
   color: var(--sf-text-primary);
@@ -503,8 +503,8 @@ function openDocument(document) {
 }
 .profile-label {
   color: var(--sf-text-disabled);
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 380;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -533,7 +533,6 @@ function openDocument(document) {
 }
 .section-heading,
 .resource-row,
-.catalog-row,
 .scene-group > header,
 .layout-row,
 .layout-main {
@@ -547,11 +546,11 @@ function openDocument(document) {
 .section-heading h3 {
   margin: 0 4px 8px;
   color: var(--sf-text-disabled);
-  font-size: 10px;
+  font-size: 11px;
 }
 .section-hint {
   color: var(--sf-text-disabled);
-  font-size: 9px;
+  font-size: 11px;
 }
 .heading-actions,
 .scene-actions,
@@ -568,7 +567,7 @@ function openDocument(document) {
   border: 0;
   background: transparent;
   color: var(--sf-brand);
-  font-size: 10px;
+  font-size: 11px;
   cursor: pointer;
 }
 button:disabled {
@@ -582,7 +581,7 @@ button:disabled {
   gap: 10px;
   padding: 7px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 6px;
   background: transparent;
   color: var(--sf-text-secondary);
   text-align: left;
@@ -608,7 +607,7 @@ button:disabled {
   height: 36px;
   flex: 0 0 52px;
   border: 1px solid var(--sf-border-light);
-  border-radius: 5px;
+  border-radius: 6px;
   object-fit: cover;
 }
 .resource-row > span,
@@ -624,29 +623,35 @@ button:disabled {
 .empty-note,
 .scene-title small {
   color: var(--sf-text-disabled);
-  font-size: 10px;
+  font-size: 11px;
 }
 .resource-row b {
+  white-space: normal;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
-.catalog-row {
-  gap: 12px;
+.resource-row {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 16px;
+  gap: 8px;
+  align-items: start;
 }
-.catalog-thumbnail {
-  width: 112px;
-  height: 63px;
-  flex: 0 0 112px;
-  border: 1px solid var(--sf-border-light);
-  border-radius: 7px;
-  object-fit: cover;
+.resource-row :deep(.resource-thumbnail) {
+  width: 52px;
+  height: 52px;
 }
-.catalog-row > div {
-  display: flex;
+.resource-row > .el-button {
+  grid-column: 2 / 4;
+  justify-self: end;
+}
+.resource-row > span {
   min-width: 0;
-  flex: 1;
-  flex-direction: column;
+}
+.resource-row small {
+  overflow-wrap: anywhere;
 }
 .authoring-heading {
   margin-top: 14px;
@@ -685,28 +690,11 @@ button:disabled {
 .layout-actions {
   padding-right: 6px;
 }
-.catalog-row {
-  width: 100%;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 12px;
-  border: 1px solid var(--sf-border-light);
-  background: transparent;
-  color: var(--sf-text-primary);
-  text-align: left;
-  cursor: pointer;
-}
-.catalog-row.selected {
-  border-color: var(--sf-brand);
-  background: var(--sf-brand-soft);
-}
-.catalog-row div {
-  display: flex;
-  flex-direction: column;
-}
-.catalog-row span,
-.catalog-row small {
-  color: var(--sf-text-secondary);
+.catalog-selection {
+  margin: 14px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: break-word;
 }
 .catalog-form {
   display: grid;

@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <div class="agents-view">
     <header class="page-hero">
@@ -408,7 +391,7 @@ function formatTokens(value) {
   gap: 24px;
   margin-bottom: 14px;
   padding: 18px 20px;
-  border: 1px solid var(--sf-border-light);
+  border: 0;
   border-left: 3px solid var(--sf-brand);
   border-radius: var(--sf-radius-l);
   background: var(--sf-bg-secondary);
@@ -418,8 +401,8 @@ function formatTokens(value) {
 .eyebrow {
   margin: 0 0 5px;
   color: var(--sf-brand);
-  font-size: 10px;
-  font-weight: 750;
+  font-size: 11px;
+  font-weight: 380;
   letter-spacing: 0.12em;
 }
 
@@ -459,7 +442,7 @@ function formatTokens(value) {
 
 .agent-catalog,
 .agent-detail {
-  border: 1px solid var(--sf-border-light);
+  border: 0;
   border-radius: var(--sf-radius-l);
   background: var(--sf-bg-secondary);
   box-shadow: var(--sf-shadow-sm);
@@ -476,7 +459,7 @@ function formatTokens(value) {
   padding: 6px 8px 12px;
   color: var(--sf-text-primary);
   font-size: var(--sf-font-sm);
-  font-weight: 650;
+  font-weight: 520;
 }
 
 .poll-hint {
@@ -504,10 +487,10 @@ function formatTokens(value) {
   width: 48px;
   height: 48px;
   flex: none;
-  border-radius: 13px;
+  border-radius: 12px;
   color: #fff;
   font-size: 19px;
-  font-weight: 750;
+  font-weight: 630;
 }
 
 .identity-copy {
@@ -571,8 +554,8 @@ function formatTokens(value) {
 .detail-card {
   min-width: 0;
   padding: 16px;
-  border: 1px solid var(--sf-border-light);
-  border-radius: 11px;
+  border: 0;
+  border-radius: 12px;
   background: var(--sf-bg-primary);
 }
 
@@ -661,8 +644,8 @@ function formatTokens(value) {
 .chip-list code,
 .skill-list span {
   padding: 5px 8px;
-  border: 1px solid var(--sf-border-light);
-  border-radius: 7px;
+  border: 0;
+  border-radius: 6px;
   background: var(--sf-bg-secondary);
   color: var(--sf-text-secondary);
   font-size: 11px;
@@ -690,7 +673,7 @@ function formatTokens(value) {
 }
 
 .detail-empty {
-  border: 1px solid var(--sf-border-light);
+  border: 0;
   border-radius: var(--sf-radius-l);
   background: var(--sf-bg-secondary);
 }

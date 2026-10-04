@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <!-- 行编排（17-web-ui-design §6.1）：角色色边条 + 徽标 + 时间戳 + 状态。
        interaction 频道行渲染为 ApprovalCard（F4）；delegation 类型行渲染为
@@ -42,15 +25,15 @@ limitations under the License.
           </span>
           <span v-else-if="message.status === 'cancelled'" class="row-cancelled">已中断</span>
           <span v-else-if="message.usage" class="row-usage">{{ usageText }}</span>
-          <span
+          <el-tooltip
             v-if="traceable"
-            class="row-trace"
-            :class="{ 'is-busy': tracing }"
-            title="查看本轮运行的链路追踪"
-            @click="onTrace"
+            content="查看本轮运行的链路追踪"
+            effect="dark"
+            :show-after="500"
+            placement="top"
           >
-            追踪
-          </span>
+            <span class="row-trace" :class="{ 'is-busy': tracing }" @click="onTrace"> 追踪 </span>
+          </el-tooltip>
         </div>
         <details
           v-for="round in message.reasoningRounds?.length
@@ -326,7 +309,7 @@ const usageText = computed(() => {
   background: color-mix(in srgb, var(--row-color) 13%, var(--sf-bg-secondary));
   color: var(--row-color);
   font-size: var(--sf-font-xs);
-  font-weight: 750;
+  font-weight: 380;
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--row-color) 20%, transparent);
 }
 
@@ -345,7 +328,7 @@ const usageText = computed(() => {
 .row-badge {
   border: none;
   font-size: var(--sf-font-xs);
-  font-weight: 650;
+  font-weight: 520;
   line-height: 20px;
 }
 

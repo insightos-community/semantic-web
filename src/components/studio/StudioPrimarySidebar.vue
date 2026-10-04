@@ -1,27 +1,12 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <aside class="primary-sidebar" data-testid="studio-primary-sidebar">
     <header class="sidebar-header">
       <strong>{{ viewMeta.title }}</strong>
-      <button type="button" title="关闭主侧栏" aria-label="关闭主侧栏" @click="$emit('close')">
-        <Close />
-      </button>
+      <el-tooltip content="关闭主侧栏" effect="dark" :show-after="500" placement="bottom">
+        <button type="button" aria-label="关闭主侧栏" @click="$emit('close')">
+          <Close />
+        </button>
+      </el-tooltip>
     </header>
 
     <div class="sidebar-content">
@@ -30,7 +15,16 @@ limitations under the License.
           <span>项目</span>
           <strong>{{ project.currentProject?.name || '未选择 Project' }}</strong>
           <small>{{ project.currentProject?.mode === 'running' ? '运行模式' : '开发模式' }}</small>
+          <el-button :disabled="!project.currentProject?.id" @click="showImports = true">
+            <span>导入项目内容</span>
+          </el-button>
         </section>
+        <ProjectImportDialog
+          v-model="showImports"
+          :project-id="project.currentProject?.id || ''"
+          :editable="project.currentProject?.mode === 'development'"
+          @imported="simulation.refreshSceneResources()"
+        />
         <section class="sidebar-section project-setup">
           <h3>运行准备</h3>
           <button
@@ -114,9 +108,16 @@ limitations under the License.
         <section class="sidebar-section conversation-section">
           <div class="section-heading">
             <h3>会话</h3>
-            <button type="button" title="新建 Conversation" @click="createConversation">
-              <Plus />
-            </button>
+            <el-tooltip
+              content="新建 Conversation"
+              effect="dark"
+              :show-after="500"
+              placement="bottom"
+            >
+              <button type="button" @click="createConversation">
+                <Plus />
+              </button>
+            </el-tooltip>
           </div>
           <div class="conversation-filter" role="tablist" aria-label="Conversation 列表范围">
             <button
@@ -157,16 +158,22 @@ limitations under the License.
                 </small>
               </span>
             </button>
-            <button
+            <el-tooltip
               v-if="conversationScope === 'active'"
-              type="button"
-              class="conversation-action"
-              :title="`归档 ${item.title || 'Conversation'}`"
-              :aria-label="`归档 ${item.title || 'Conversation'}`"
-              @click.stop="archiveConversation(item)"
+              :content="`归档 ${item.title || 'Conversation'}`"
+              effect="dark"
+              :show-after="500"
+              placement="left"
             >
-              <Delete />
-            </button>
+              <button
+                type="button"
+                class="conversation-action"
+                :aria-label="`归档 ${item.title || 'Conversation'}`"
+                @click.stop="archiveConversation(item)"
+              >
+                <FolderDelete />
+              </button>
+            </el-tooltip>
           </div>
           <div v-if="visibleConversations.length === 0" class="empty-state">
             <ChatDotRound />
@@ -239,9 +246,11 @@ limitations under the License.
         <section class="sidebar-section">
           <div class="section-heading">
             <h3>当前地图版本的实体</h3>
-            <button type="button" title="打开地图" @click="openEditor('map')">
-              <ArrowRight />
-            </button>
+            <el-tooltip content="打开地图" effect="dark" :show-after="500" placement="left">
+              <button type="button" @click="openEditor('map')">
+                <ArrowRight />
+              </button>
+            </el-tooltip>
           </div>
           <button
             v-for="entity in visibleMapEntities"
@@ -266,9 +275,11 @@ limitations under the License.
         <section class="sidebar-section">
           <div class="section-heading">
             <h3>项目设备</h3>
-            <button type="button" title="刷新 Robot 目录" @click="reloadDevices">
-              <Refresh />
-            </button>
+            <el-tooltip content="刷新 Robot 目录" effect="dark" :show-after="500" placement="left">
+              <button type="button" @click="reloadDevices">
+                <Refresh />
+              </button>
+            </el-tooltip>
           </div>
           <p v-if="devices.snapshotStatus === 'loading' && !devices.robots.length" role="status">
             正在读取设备状态…
@@ -368,14 +379,16 @@ limitations under the License.
         <section class="sidebar-section workflow-history-section">
           <div class="section-heading">
             <h3>流程记录</h3>
-            <button
-              type="button"
-              title="刷新 Workflow 历史"
-              :disabled="workflow.loading"
-              @click="reloadWorkflows"
+            <el-tooltip
+              effect="dark"
+              :show-after="500"
+              content="刷新 Workflow 历史"
+              placement="left"
             >
-              <Refresh />
-            </button>
+              <button type="button" :disabled="workflow.loading" @click="reloadWorkflows">
+                <Refresh />
+              </button>
+            </el-tooltip>
           </div>
           <input
             v-model="workflowQuery"
@@ -410,9 +423,11 @@ limitations under the License.
         <section class="sidebar-section run-section">
           <div class="section-heading">
             <h3>Agent 请求</h3>
-            <button type="button" title="刷新 Runs" :disabled="runs.loading" @click="reloadRuns">
-              <Refresh />
-            </button>
+            <el-tooltip content="刷新 Runs" effect="dark" :show-after="500" placement="left">
+              <button type="button" :disabled="runs.loading" @click="reloadRuns">
+                <Refresh />
+              </button>
+            </el-tooltip>
           </div>
           <div
             v-for="run in visibleRuns"
@@ -432,15 +447,17 @@ limitations under the License.
                 >{{ shortId(run.id) }} · {{ run.agent_id || run.agent_name || 'leader' }}</small
               >
             </span>
-            <button
+            <el-tooltip
               v-if="run.trace_id"
-              class="row-action"
-              type="button"
-              title="在 Editor 中打开 Trace"
-              @click.stop="openTrace(run)"
+              content="在 Editor 中打开 Trace"
+              effect="dark"
+              :show-after="500"
+              placement="left"
             >
-              <DataAnalysis />
-            </button>
+              <button class="row-action" type="button" @click.stop="openTrace(run)">
+                <DataAnalysis />
+              </button>
+            </el-tooltip>
           </div>
           <div v-if="visibleRuns.length === 0" class="empty-state compact">
             <VideoPlay />
@@ -479,7 +496,7 @@ import {
   Cpu,
   DataAnalysis,
   Document,
-  Delete,
+  FolderDelete,
   FolderOpened,
   Aim,
   Location,
@@ -491,9 +508,11 @@ import {
 } from '@element-plus/icons-vue'
 import { requestConversationArchive } from '@/studio/conversationActions'
 import { currentProjectWork } from '@/studio/currentWork'
+import { runningProjectScene } from '@/studio/sceneWorkspace'
 import { useExecutionScopeStore } from '@/stores/executionScope'
 import ProjectSimulationSceneResources from '@/components/studio/ProjectSimulationSceneResources.vue'
 import ProjectAgentSkillResources from '@/components/studio/ProjectAgentSkillResources.vue'
+import ProjectImportDialog from '@/components/studio/ProjectImportDialog.vue'
 import SimulationSidebar from '@/components/studio/SimulationSidebar.vue'
 import DeviceStatus from '@/components/device/DeviceStatus.vue'
 import { useSimulationStore } from '@/stores/simulation'
@@ -515,6 +534,7 @@ const props = defineProps({
 defineEmits(['close'])
 
 const project = useProjectStore()
+const showImports = ref(false)
 const conversation = useConversationStore()
 const runs = useRunsStore()
 const interactions = useInteractionsStore()
@@ -538,10 +558,15 @@ const visibleWorkflows = computed(() =>
   )
 )
 const projectSceneLabel = computed(() => {
-  const reference = simulation.projectScenes[0]
+  const current = runningProjectScene(simulation)
+  // 项目可以包含多个场景；现场存在时侧栏也跟随它，目录第一项只作未运行时的入口。
+  if (simulation.instance && !current)
+    return `${simulation.instance.scene_key} · ${simulation.instance.layout}`
+  const reference = current || simulation.projectScenes[0]
   if (!reference) return '添加场景并选择 Layout'
   const scene = simulation.catalogById(reference.catalog_scene_id)
-  return `${scene?.name || reference.catalog_scene_id} · ${reference.default_variant_id || '选择 Layout'}`
+  const variant = simulation.instance?.layout || reference.default_variant_id || '选择 Layout'
+  return `${scene?.name || reference.catalog_scene_id} · ${variant}`
 })
 const runtimeLabel = computed(() => {
   const preferred = simulation.runtimePreference.preferred_runtime_installation_id
@@ -868,14 +893,14 @@ watch(
   display: flex;
   height: calc(100% - 16px);
   margin: 8px 0 8px 8px;
-  border: 1px solid var(--sf-border-light);
+  border: 0;
   border-radius: var(--sf-radius-lg);
   overflow: hidden;
   min-width: 0;
   flex-direction: column;
   background: var(--sf-bg-secondary);
   color: var(--sf-text-primary);
-  box-shadow: var(--sf-shadow-sm);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--sf-border) 40%, transparent);
 }
 
 .sidebar-header {
@@ -935,8 +960,8 @@ watch(
 .project-card {
   display: flex;
   flex-direction: column;
-  padding: 10px 12px;
-  border: 1px solid color-mix(in srgb, var(--sf-brand) 14%, var(--sf-border-light));
+  padding: 15px;
+  border: 0;
   border-radius: var(--sf-radius-lg);
   background:
     radial-gradient(
@@ -949,7 +974,7 @@ watch(
   span,
   small {
     color: var(--sf-text-disabled);
-    font-size: 10px;
+    font-size: 11px;
   }
 
   strong {
@@ -964,7 +989,7 @@ watch(
   h3 {
     margin: 0 4px 8px;
     color: var(--sf-text-disabled);
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.03em;
   }
 }
@@ -983,7 +1008,7 @@ watch(
     align-items: center;
     justify-content: space-between;
     padding: 7px 4px;
-    border-bottom: 1px solid var(--sf-border-light);
+    border-bottom: 0;
     color: var(--sf-text-primary);
     cursor: pointer;
     list-style: none;
@@ -997,12 +1022,12 @@ watch(
       align-items: center;
       gap: 6px;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 380;
     }
 
     small {
       color: var(--sf-text-disabled);
-      font-size: 9px;
+      font-size: 11px;
     }
 
     svg {
@@ -1049,9 +1074,9 @@ watch(
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 44px;
+  min-height: 36px;
   gap: 10px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   padding: 6px 9px;
   border: 0;
   border-radius: var(--sf-radius-md);
@@ -1077,7 +1102,7 @@ watch(
     overflow: hidden;
     color: var(--sf-text-primary);
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 380;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -1085,19 +1110,25 @@ watch(
   small {
     overflow: hidden;
     color: var(--sf-text-disabled);
-    font-size: 10px;
+    font-size: 11px;
+    font-weight: 380;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  &:hover,
-  &.active {
+  &:hover {
     background: var(--sf-bg-hover);
-    color: var(--sf-brand);
+    color: var(--sf-text-primary);
   }
 
   &.active {
-    box-shadow: inset 3px 0 var(--sf-brand);
+    background: linear-gradient(135deg, var(--sf-brand) 0%, var(--sf-brand-active) 100%);
+    color: #fff;
+
+    b,
+    small {
+      color: #fff;
+    }
   }
 }
 
@@ -1107,7 +1138,7 @@ watch(
 }
 
 .conversation-row {
-  min-height: 48px;
+  min-height: 36px;
 }
 
 .conversation-filter {
@@ -1126,7 +1157,7 @@ watch(
     background: transparent;
     color: var(--sf-text-disabled);
     cursor: pointer;
-    font-size: 10px;
+    font-size: 11px;
 
     &.active {
       background: var(--sf-bg-secondary);
@@ -1229,7 +1260,7 @@ watch(
   border-radius: var(--sf-radius-md);
   background: var(--sf-brand-soft);
   color: var(--sf-text-secondary);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.55;
 
   svg {
@@ -1259,7 +1290,7 @@ watch(
   }
 
   span {
-    font-size: 10px;
+    font-size: 11px;
     line-height: 1.5;
   }
 

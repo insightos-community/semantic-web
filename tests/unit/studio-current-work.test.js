@@ -1,22 +1,68 @@
-// Copyright 2026 InsightOS
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 import { describe, expect, it } from 'vitest'
 import { currentProjectWork, projectWorkProgress } from '@/studio/currentWork'
 
 describe('当前工作摘要', () => {
+  it('停止或失败的 Skill 不被同一 Agent 请求的完成状态覆盖', () => {
+    for (const status of ['stopped', 'failed', 'completed']) {
+      const work = currentProjectWork({
+        projectId: 'p1',
+        runs: [{ id: 'request', robot_id: 'r1', status: 'completed' }],
+        executions: [{ id: 'actual', robot_id: 'r1', run_id: 'request', status }]
+      })
+      expect(work.current).toBeNull()
+      expect(work.recent).toMatchObject({ kind: 'execution', value: { id: 'actual', status } })
+    }
+  })
+  it('新的失败请求不会遮蔽尚未确认停止的物理执行', () => {
+    const work = currentProjectWork({
+      projectId: 'p1',
+      devices: [{ robot_id: 'r1', current_execution_id: 'original' }],
+      executions: [
+        {
+          id: 'original',
+          robot_id: 'r1',
+          run_id: 'old-run',
+          status: 'interrupted',
+          created_at: '2026-09-11T02:50:00Z'
+        },
+        {
+          id: 'rejected',
+          robot_id: 'r1',
+          run_id: 'new-run',
+          status: 'failed',
+          created_at: '2026-09-11T02:55:00Z'
+        }
+      ],
+      runs: [
+        { id: 'old-run', robot_id: 'r1', status: 'completed' },
+        { id: 'new-run', robot_id: 'r1', status: 'failed' }
+      ]
+    })
+    expect(work.current).toMatchObject({ kind: 'execution', value: { id: 'original' } })
+    expect(work.items).toHaveLength(1)
+  })
+
+  it('旧场景的 interrupted 历史不恢复为当前执行', () => {
+    const work = currentProjectWork({
+      projectId: 'p1',
+      devices: [{ robot_id: 'r1', current_execution_id: '' }],
+      executions: [{ id: 'historical', robot_id: 'r1', status: 'interrupted' }]
+    })
+    expect(work.current).toBeNull()
+  })
+
+  it('新对话生成期间仍优先显示原来的独立物理执行', () => {
+    const work = currentProjectWork({
+      projectId: 'p1',
+      executions: [{ id: 'original', robot_id: 'r1', run_id: 'old-run', status: 'running' }],
+      runs: [
+        { id: 'old-run', robot_id: 'r1', status: 'completed' },
+        { id: 'new-run', robot_id: 'r1', status: 'running' }
+      ]
+    })
+    expect(work.current).toMatchObject({ kind: 'execution', value: { id: 'original' } })
+    expect(work.items).toHaveLength(2)
+  })
   it('当前工作独立于会话选择，Task Run 与关联 Execution 不重复计数', () => {
     const work = currentProjectWork({
       projectId: 'p1',

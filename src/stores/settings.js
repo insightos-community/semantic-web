@@ -1,18 +1,3 @@
-// Copyright 2026 InsightOS
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 // 设置域（R3 设置页 v1）：生效配置快照（服务端已掩码）/ base_hash 乐观锁 / 托管密钥。
 // 安全纪律：配置树与密钥清单一律来自服务端掩码响应，前端不持有、不打印明文；
 // 密钥明文仅经 saveKey 透传一次（PUT 请求体），不落 store。

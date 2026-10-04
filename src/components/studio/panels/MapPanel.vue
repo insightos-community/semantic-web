@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <section class="map-panel" data-testid="semantic-map-panel">
     <header>
@@ -123,14 +106,14 @@ limitations under the License.
           @pointerup="endCanvasPointer"
           @pointercancel="cancelCanvasPointer"
         />
-        <button
-          class="reset-view"
-          type="button"
-          title="将相机和焦点恢复到地图原点"
-          @click="resetView"
+        <el-tooltip
+          content="将相机和焦点恢复到地图原点"
+          effect="dark"
+          :show-after="500"
+          placement="left"
         >
-          回到原点
-        </button>
+          <button class="reset-view" type="button" @click="resetView">回到原点</button>
+        </el-tooltip>
         <div class="orientation-ruler" aria-label="地图方向尺">
           <span class="axis-y">+Y / 北</span>
           <span class="axis-x">+X / 东</span>
@@ -284,6 +267,7 @@ import { mapGroundPointToWorld, worldPositionToMapScene } from '@/studio/mapCoor
 import { createRenderLoop, disposeThreeLifecycle } from '@/studio/threeLifecycle'
 import { applyMapNavigationPreset } from '@/studio/mapNavigation'
 import {
+  applyInitialSceneView,
   indexViewerScene,
   loadVisualContent,
   mapSourceReferenceMatrix
@@ -640,6 +624,10 @@ function resetView() {
 }
 function fitViewToEntities(force = false) {
   if (!three || !camera || !controls || (!force && hasManualNavigation)) return false
+  if (applyInitialSceneView(three, runtimeVisualRoot, camera, controls)) {
+    controls.saveState()
+    return true
+  }
   const bounds = new three.Box3()
   let hasContent = false
   for (const object of entityObjects.values()) {
@@ -1081,8 +1069,8 @@ onBeforeUnmount(() => {
 }
 .eyebrow {
   color: var(--sf-brand);
-  font-size: 8px;
-  font-weight: 750;
+  font-size: 10px;
+  font-weight: 380;
   letter-spacing: 0.09em;
 }
 .map-switch,
@@ -1110,7 +1098,7 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   background: transparent;
   color: var(--sf-text-secondary);
-  font-size: 10px;
+  font-size: 11px;
   cursor: pointer;
 }
 .map-switch button.active,
@@ -1123,7 +1111,7 @@ onBeforeUnmount(() => {
 .generation {
   margin-left: auto;
   color: var(--sf-text-disabled);
-  font-size: 9px;
+  font-size: 11px;
 }
 .map-toolbar {
   display: flex;
@@ -1139,7 +1127,7 @@ onBeforeUnmount(() => {
 }
 .selection-purpose {
   color: var(--sf-warning);
-  font-size: 9px;
+  font-size: 11px;
 }
 .map-workspace {
   display: grid;
@@ -1160,7 +1148,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   padding: 7px 5px;
   color: var(--sf-text-disabled);
-  font-size: 9px;
+  font-size: 11px;
 }
 .map-tree > button {
   display: flex;
@@ -1169,7 +1157,7 @@ onBeforeUnmount(() => {
   gap: 9px;
   padding: 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 6px;
   background: transparent;
   color: var(--sf-text-primary);
   cursor: pointer;
@@ -1184,7 +1172,7 @@ onBeforeUnmount(() => {
   width: 12px;
   height: 12px;
   border: 2px solid var(--sf-brand);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 .map-tree > button i[data-kind='cylinder'] {
   border-radius: 50%;
@@ -1199,7 +1187,7 @@ onBeforeUnmount(() => {
 }
 .map-tree small {
   color: var(--sf-text-disabled);
-  font-size: 9px;
+  font-size: 11px;
 }
 .relation-heading {
   margin-top: 12px;
@@ -1216,7 +1204,7 @@ onBeforeUnmount(() => {
   gap: 5px;
   padding: 6px;
   color: var(--sf-text-secondary);
-  font-size: 9px;
+  font-size: 11px;
 }
 .relation-row b {
   color: var(--sf-brand);
@@ -1244,10 +1232,10 @@ onBeforeUnmount(() => {
   right: 12px;
   bottom: 12px;
   padding: 6px 9px;
-  border-radius: 7px;
+  border-radius: 6px;
   background: color-mix(in srgb, var(--sf-bg-secondary) 88%, transparent);
   color: var(--sf-text-secondary);
-  font-size: 9px;
+  font-size: 11px;
   box-shadow: var(--sf-shadow-sm);
 }
 .reset-view {
@@ -1256,11 +1244,11 @@ onBeforeUnmount(() => {
   right: 12px;
   padding: 7px 10px;
   border: 1px solid var(--sf-border-light);
-  border-radius: 7px;
+  border-radius: 6px;
   background: color-mix(in srgb, var(--sf-bg-secondary) 92%, transparent);
   color: var(--sf-text-secondary);
   cursor: pointer;
-  font-size: 10px;
+  font-size: 11px;
   box-shadow: var(--sf-shadow-sm);
 }
 .reset-view:hover {
@@ -1277,7 +1265,7 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   background: color-mix(in srgb, var(--sf-bg-secondary) 88%, transparent);
   color: var(--sf-text-secondary);
-  font-size: 8px;
+  font-size: 10px;
   pointer-events: none;
   box-shadow: var(--sf-shadow-sm);
 }
@@ -1330,7 +1318,7 @@ onBeforeUnmount(() => {
 .empty {
   padding: 22px 8px;
   color: var(--sf-text-disabled);
-  font-size: 9px;
+  font-size: 11px;
   text-align: center;
 }
 .entity-form {
@@ -1346,7 +1334,7 @@ onBeforeUnmount(() => {
   display: block;
   width: 100%;
   color: var(--sf-text-disabled);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.45;
 }
 .entity-form :deep(.el-select) {
@@ -1370,7 +1358,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 4px;
   color: var(--sf-text-secondary);
-  font-size: 10px;
+  font-size: 11px;
 }
 .fixed-kind {
   display: inline-flex;

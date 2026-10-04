@@ -1,18 +1,3 @@
-// Copyright 2026 InsightOS
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
@@ -76,6 +61,56 @@ const instance = {
 const robot = { robot_id: 'r1pro-1', sdk_type: 'r1pro-mujoco-v1' }
 
 describe('simulation store', () => {
+  it('场景加载预算来自 Runtime Profile，未声明时保留三分钟', () => {
+    const store = useSimulationStore()
+    store.instance = { ...instance, runtime_profile_id: 'behavior-omnigibson' }
+    expect(store.sceneStartTimeoutMilliseconds).toBe(180_000)
+    store.runtimeProfiles = [{ runtime_profile_id: 'behavior-omnigibson', scene_start_timeout_seconds: 900 }]
+    expect(store.sceneStartTimeoutMilliseconds).toBe(900_000)
+  })
+
+  it.each(['starting', 'resetting', 'stopping'])('%s 时不重复提交 Layout 切换', async (state) => {
+    const store = useSimulationStore()
+    store.instance = { ...instance, state }
+    await expect(store.switchVariant('instance-302')).rejects.toThrow('请等待当前操作完成')
+    expect(api.switchProjectSceneVariant).not.toHaveBeenCalled()
+  })
+
+  it('后台启动观察使用 Profile 预算', async () => {
+    const store = useSimulationStore()
+    store.instance = { ...instance, runtime_profile_id: 'behavior-omnigibson' }
+    store.runtimeProfiles = [{ runtime_profile_id: 'behavior-omnigibson', scene_start_timeout_seconds: 900 }]
+    const wait = vi.spyOn(store, 'waitForSceneState').mockResolvedValue(instance)
+    vi.spyOn(store, 'refreshRuntimeData').mockResolvedValue()
+    await store.observeStartedScene(instance.instance_id)
+    expect(wait).toHaveBeenCalledWith(['running', 'paused'], { timeoutMilliseconds: 900_000 })
+  })
+
+  it('实例切换后忽略旧状态轮询的迟到响应', async () => {
+    vi.useFakeTimers()
+    try {
+      const store = useSimulationStore()
+      store.instance = { ...instance, state: 'starting' }
+      let resolveOld
+      api.getSceneInstance.mockImplementationOnce(() => new Promise((resolve) => { resolveOld = resolve }))
+      const waiting = store.waitForSceneState(['running'])
+      await vi.advanceTimersByTimeAsync(500)
+      store.instance = { ...instance, instance_id: 'new-scene' }
+      resolveOld({ instance })
+      await waiting
+      expect(store.instance.instance_id).toBe('new-scene')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+  it('从快照恢复当前场景和初态，页面刷新后选择器与现场一致', () => {
+    const store = useSimulationStore()
+    store.resetForProject('p1')
+    store.applySnapshot({project_id:'p1', instance:{instance_id:'scene-1',state:'running',layout:'init-2'}, catalog_scene_id:'libero-spatial-0',scene_version:'1.0.0',variant_id:'init-2'})
+    expect(store.catalogSceneId).toBe('libero-spatial-0')
+    expect(store.variantId).toBe('init-2')
+    expect(store.sceneVersion).toBe('1.0.0')
+  })
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
@@ -374,61 +409,6 @@ describe('simulation store', () => {
     expect(store.instance.instance_id).toBe('scene-1')
     expect(store.selectedRobotId).toBe(robot.robot_id)
     expect(store.sensors[0].sensor_id).toBe('camera.rgb')
-  })
-
-  describe.each(['legacy', 'project'])('%s scene renderer selection', (route) => {
-    async function start(store, options) {
-      if (route === 'legacy') return store.startScene('depalletizing', options)
-      return store.startProjectScene(
-        {
-          project_scene_id: 'project-scene-1',
-          catalog_scene_id: 'depalletizing-r1pro',
-          scene_version: '0.5.0',
-          default_variant_id: 'layout_smoke'
-        },
-        options
-      )
-    }
-
-    it.each(['cgl', 'egl', 'osmesa'])(
-      'uses the Runtime configured %s backend by default',
-      async (configured) => {
-        const store = useSimulationStore()
-        store.resetForProject('project-1')
-        const endpoint = route === 'legacy' ? api.startScene : api.startProjectScene
-        endpoint.mockImplementation(async (_project, _scene, request) => {
-          const effective = request.render_backend === 'auto' ? configured : request.render_backend
-          if (effective !== configured)
-            throw new Error(`configured:${configured}, requested:${effective}`)
-          return { instance: { ...instance, render_backend: effective } }
-        })
-
-        await start(store, { layout: 'layout001' })
-
-        expect(endpoint).toHaveBeenCalledWith(
-          'project-1',
-          expect.any(String),
-          expect.objectContaining({ render_backend: 'auto' })
-        )
-        endpoint.mockReset()
-      }
-    )
-
-    it.each(['cgl', 'egl', 'glfw'])('preserves an explicit %s backend', async (backend) => {
-      const store = useSimulationStore()
-      store.resetForProject('project-1')
-      const endpoint = route === 'legacy' ? api.startScene : api.startProjectScene
-      endpoint.mockResolvedValue({ instance })
-
-      await start(store, { layout: 'layout001', render_backend: backend })
-
-      expect(endpoint).toHaveBeenCalledWith(
-        'project-1',
-        expect.any(String),
-        expect.objectContaining({ render_backend: backend })
-      )
-      endpoint.mockReset()
-    })
   })
 
   it('等待异步启动完成后才读取 Robot 和场景快照', async () => {

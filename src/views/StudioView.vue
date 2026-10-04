@@ -1,26 +1,11 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <div class="studio-shell">
     <header class="studio-topbar">
-      <button type="button" class="brand-button" title="返回 Project Hub" @click="goHub">
-        <span>S</span>
-      </button>
+      <el-tooltip effect="dark" :show-after="500" content="返回 Project Hub" placement="bottom">
+        <button type="button" class="brand-button" @click="goHub">
+          <span>S</span>
+        </button>
+      </el-tooltip>
       <div class="project-context">
         <small>Semantic Studio · Project</small>
         <b>{{ project.currentProject?.name || projectId }}</b>
@@ -32,112 +17,122 @@ limitations under the License.
       <div class="topbar-spacer" />
 
       <div class="layout-controls" aria-label="布局控制">
-        <button
-          type="button"
-          :class="{ active: layout.shell.primaryVisible }"
-          :aria-pressed="layout.shell.primaryVisible"
-          title="切换主侧栏"
-          aria-label="切换主侧栏"
-          @click="toggleRegion('primary')"
-        >
-          <i class="layout-glyph is-primary" />
-        </button>
-        <button
-          type="button"
-          :class="{ active: layout.shell.bottomVisible }"
-          :aria-pressed="layout.shell.bottomVisible"
-          title="切换底部面板"
-          aria-label="切换底部面板"
-          @click="toggleRegion('bottom')"
-        >
-          <i class="layout-glyph is-bottom" />
-        </button>
-        <button
-          type="button"
-          :class="{ active: layout.shell.secondaryVisible }"
-          :aria-pressed="layout.shell.secondaryVisible"
-          title="切换右侧工具区"
-          aria-label="切换右侧工具区"
-          @click="toggleRegion('secondary')"
-        >
-          <i class="layout-glyph is-secondary" />
-        </button>
+        <el-tooltip effect="dark" :show-after="500" content="切换主侧栏" placement="bottom">
+          <button
+            type="button"
+            :class="{ active: layout.shell.primaryVisible }"
+            :aria-pressed="layout.shell.primaryVisible"
+            aria-label="切换主侧栏"
+            @click="toggleRegion('primary')"
+          >
+            <i class="layout-glyph is-primary" />
+          </button>
+        </el-tooltip>
+        <el-tooltip effect="dark" :show-after="500" content="切换底部面板" placement="bottom">
+          <button
+            type="button"
+            :class="{ active: layout.shell.bottomVisible }"
+            :aria-pressed="layout.shell.bottomVisible"
+            aria-label="切换底部面板"
+            @click="toggleRegion('bottom')"
+          >
+            <i class="layout-glyph is-bottom" />
+          </button>
+        </el-tooltip>
+        <el-tooltip effect="dark" :show-after="500" content="切换右侧工具区" placement="bottom">
+          <button
+            type="button"
+            :class="{ active: layout.shell.secondaryVisible }"
+            :aria-pressed="layout.shell.secondaryVisible"
+            aria-label="切换右侧工具区"
+            @click="toggleRegion('secondary')"
+          >
+            <i class="layout-glyph is-secondary" />
+          </button>
+        </el-tooltip>
       </div>
 
-      <button
-        type="button"
-        class="topbar-icon-button"
-        title="打开对话"
-        aria-label="打开对话"
-        @click="routePanel('conversation')"
+      <el-tooltip effect="dark" :show-after="500" content="打开对话" placement="bottom">
+        <button
+          type="button"
+          class="topbar-icon-button"
+          aria-label="打开对话"
+          @click="routePanel('conversation')"
+        >
+          <ChatDotRound />
+        </button>
+      </el-tooltip>
+      <el-tooltip effect="dark" :show-after="500" content="刷新状态" placement="bottom">
+        <button
+          type="button"
+          class="topbar-icon-button"
+          aria-label="刷新状态"
+          :disabled="refreshingState"
+          @click="refreshState"
+        >
+          <RefreshRight />
+        </button>
+      </el-tooltip>
+      <el-tooltip
+        effect="dark"
+        :show-after="500"
+        :content="ui.theme === 'dark' ? '切换为浅色主题' : '切换为深色主题'"
+        placement="bottom"
       >
-        <ChatDotRound />
-      </button>
-      <button
-        type="button"
-        class="topbar-icon-button"
-        title="刷新状态"
-        aria-label="刷新状态"
-        :disabled="refreshingState"
-        @click="refreshState"
-      >
-        <RefreshRight />
-      </button>
-      <button
-        type="button"
-        class="topbar-icon-button"
-        :title="ui.theme === 'dark' ? '切换为浅色主题' : '切换为深色主题'"
-        aria-label="切换主题"
-        @click="toggleTheme"
-      >
-        <Sunny v-if="ui.theme === 'dark'" />
-        <Moon v-else />
-      </button>
-      <el-button
-        size="small"
-        type="danger"
-        plain
-        :disabled="!activeRun"
-        :loading="runs.cancellingId === activeRun?.id"
-        @click="stopRun"
-      >
-        停止生成
-      </el-button>
+        <button type="button" class="topbar-icon-button" aria-label="切换主题" @click="toggleTheme">
+          <Sunny v-if="ui.theme === 'dark'" />
+          <Moon v-else />
+        </button>
+      </el-tooltip>
+      <el-tooltip effect="dark" :show-after="500" content="停止生成" placement="bottom">
+        <span class="tooltip-reference">
+          <el-button
+            size="small"
+            type="danger"
+            plain
+            :disabled="!activeRun"
+            :loading="runs.cancellingId === activeRun?.id"
+            @click="stopRun"
+          >
+            停止生成
+          </el-button>
+        </span>
+      </el-tooltip>
     </header>
 
     <div class="studio-body">
       <aside class="activity-bar" aria-label="Studio 活动栏">
-        <button
-          v-for="item in activities"
-          :key="item.view"
-          type="button"
-          :class="{
-            active:
-              !item.route && layout.shell.primaryVisible && layout.shell.primaryView === item.view
-          }"
-          :aria-pressed="
-            item.route
-              ? undefined
-              : layout.shell.primaryVisible && layout.shell.primaryView === item.view
-          "
-          :title="item.label"
-          @click="activateActivity(item)"
-        >
-          <component :is="item.icon" />
-          <span>{{ item.short }}</span>
-          <em v-if="item.view === 'run' && interactions.pending.length">
-            {{ interactions.pending.length }}
-          </em>
-        </button>
-        <button
-          class="settings-button"
-          type="button"
-          title="当前 Project 设置"
-          @click="openProjectSettings"
-        >
-          <Setting />
-          <span>设置</span>
-        </button>
+        <template v-for="item in activities" :key="item.view">
+          <el-tooltip effect="dark" :content="item.label" :show-after="500" placement="right">
+            <button
+              type="button"
+              :class="{
+                active:
+                  !item.route &&
+                  layout.shell.primaryVisible &&
+                  layout.shell.primaryView === item.view
+              }"
+              :aria-pressed="
+                item.route
+                  ? undefined
+                  : layout.shell.primaryVisible && layout.shell.primaryView === item.view
+              "
+              @click="activateActivity(item)"
+            >
+              <component :is="item.icon" />
+              <span>{{ item.short }}</span>
+              <em v-if="item.view === 'run' && interactions.pending.length">
+                {{ interactions.pending.length }}
+              </em>
+            </button>
+          </el-tooltip>
+        </template>
+        <el-tooltip effect="dark" :show-after="500" content="当前 Project 设置" placement="right">
+          <button class="settings-button" type="button" @click="openProjectSettings">
+            <Setting />
+            <span>设置</span>
+          </button>
+        </el-tooltip>
       </aside>
 
       <div v-if="project.snapshotStatus === 'loading'" class="bootstrap-state">
@@ -265,6 +260,77 @@ limitations under the License.
       @open-memory="openProjectMemory"
       @reset-layout="dock?.resetCurrentPreset()"
     />
+    <!-- 离开 Project 确认弹窗：与归档 Project、移除 Robot Skill 等确认弹窗同款 -->
+    <el-dialog
+      v-model="leaveDialog"
+      title="离开 Project"
+      width="520px"
+      align-center
+      class="leave-project-dialog"
+      :close-on-click-modal="false"
+    >
+      <div class="leave-confirm-body">
+        <div class="leave-icon">
+          <svg
+            width="200"
+            height="200"
+            viewBox="0 0 200 200"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <mask
+              id="mask0_3200_87342"
+              style="mask-type: alpha"
+              maskUnits="userSpaceOnUse"
+              x="0"
+              y="0"
+              width="200"
+              height="200"
+            >
+              <rect width="200" height="200" fill="#FAFAFA" />
+            </mask>
+            <g mask="url(#mask0_3200_87342)">
+              <path
+                d="M89.7615 43.7483C94.441 36.0935 105.559 36.0935 110.238 43.7483L166.78 136.241C171.669 144.237 165.914 154.5 156.542 154.5H43.458C34.0861 154.5 28.3314 144.237 33.2196 136.241L89.7615 43.7483Z"
+                fill="#FC8A18"
+              />
+              <path
+                d="M84.6426 40.6191C91.6618 29.1369 108.338 29.1369 115.357 40.6191L171.899 133.111C179.232 145.106 170.6 160.5 156.542 160.5H43.458C29.4001 160.5 20.7684 145.106 28.1006 133.111L84.6426 40.6191Z"
+                stroke="#FC8A18"
+                stroke-opacity="0.1"
+                stroke-width="12"
+              />
+              <rect x="92" y="124" width="16" height="16" rx="8" fill="#FAFAFA" />
+              <path
+                d="M97.7245 116C95.6259 116 93.8842 114.378 93.7346 112.285L90.3061 64.285C90.1407 61.9695 91.9745 60 94.2959 60L105.704 60C108.025 60 109.859 61.9695 109.694 64.285L106.265 112.285C106.116 114.378 104.374 116 102.276 116L97.7245 116Z"
+                fill="#FAFAFA"
+              />
+              <path
+                d="M142 35L143.018 39.9818L148 41L143.018 42.0182L142 47L140.982 42.0182L136 41L140.982 39.9818L142 35Z"
+                fill="#FC8A18"
+              />
+              <path
+                d="M149.5 50L149.924 52.0757L152 52.5L149.924 52.9243L149.5 55L149.076 52.9243L147 52.5L149.076 52.0757L149.5 50Z"
+                fill="#FC8A18"
+              />
+              <path
+                d="M16 107L17.1879 112.812L23 114L17.1879 115.188L16 121L14.8121 115.188L9 114L14.8121 112.812L16 107Z"
+                fill="#FC8A18"
+              />
+            </g>
+          </svg>
+        </div>
+        <p class="leave-confirm-title">离开 Project 并返回项目列表？</p>
+        <p class="leave-confirm-desc">当前工作将在后台继续运行。</p>
+      </div>
+      <template #footer>
+        <el-button size="large" @click="leaveDialog = false">留在这里</el-button>
+        <el-button size="large" type="primary" :loading="leaving" @click="confirmLeave">
+          后台运行并离开
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -281,7 +347,6 @@ import {
   watch
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessageBox } from 'element-plus'
 import {
   ChatDotRound,
   Connection,
@@ -393,6 +458,9 @@ let resizing = null
 const activities = [
   { view: 'explorer', label: '项目', short: '项目', icon: Files },
   { view: 'scene', label: '场景', short: '场景', icon: Monitor },
+  // Studio 中的入口表达“当前 Project 使用和观察哪些 Robot”，因此留在同一
+  // 三栏工作区。跨 Project 的 Pilot/Robot 总览仍由 /devices 全局设备中心负责，
+  // 两者复用同一 Store 与 Server 连接，不复制设备状态。
   { view: 'robots', label: '设备', short: '设备', icon: Connection },
   { view: 'run', label: '运行', short: '运行', icon: VideoPlay },
   { view: 'builder', label: 'Agents', short: 'Agents', icon: Cpu }
@@ -787,20 +855,32 @@ async function stopRun() {
   }
 }
 
+const leaveDialog = ref(false)
+const leaving = ref(false)
+
 async function goHub() {
   try {
     if ((await dock.value?.prepareCloseAll('project-exit')) === false) return
     if (simulation.instance || workflows.active || robots.active.length || activeRun.value) {
-      await ElMessageBox.confirm('当前工作将在后台继续运行。', '离开 Project', {
-        type: 'info',
-        confirmButtonText: '后台运行并离开',
-        cancelButtonText: '留在这里'
-      })
+      leaveDialog.value = true
+      return
     }
     await router.push('/projects')
   } catch (error) {
-    if (error === 'cancel' || error === 'close') return
     ui.notify({ type: 'error', message: error.message || '离开 Project 失败' })
+  }
+}
+
+async function confirmLeave() {
+  if (leaving.value) return
+  leaving.value = true
+  try {
+    await router.push('/projects')
+    leaveDialog.value = false
+  } catch (error) {
+    ui.notify({ type: 'error', message: error.message || '离开 Project 失败' })
+  } finally {
+    leaving.value = false
   }
 }
 
@@ -903,17 +983,36 @@ onUnmounted(() => {
 }
 
 .brand-button {
-  display: grid;
-  width: 32px;
-  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 12px 0 9px;
+  flex: none;
   border: 0;
-  border-radius: 9px;
-  background: linear-gradient(145deg, var(--sf-brand), #7766ee);
-  color: white;
-  font-weight: 800;
+  border-radius: 8px;
+  background: var(--sf-bg-hover);
+  color: var(--sf-text-primary);
+  font-size: 12px;
+  font-weight: 450;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  box-shadow: 0 5px 14px color-mix(in srgb, var(--sf-brand) 28%, transparent);
-  place-items: center;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  .brand-icon {
+    font-size: 14px;
+  }
+
+  span {
+    white-space: nowrap;
+  }
+
+  &:hover {
+    background: var(--sf-brand);
+    color: #fff;
+  }
 }
 
 .project-context {
@@ -924,8 +1023,8 @@ onUnmounted(() => {
 
   small {
     color: var(--sf-text-disabled);
-    font-size: 8px;
-    font-weight: 650;
+    font-size: 10px;
+    font-weight: 380;
     letter-spacing: 0.09em;
   }
 
@@ -945,13 +1044,13 @@ onUnmounted(() => {
   border-radius: 999px;
   background: var(--sf-bg-tertiary);
   color: var(--sf-text-secondary);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .fixture-chip {
   border-color: color-mix(in srgb, var(--sf-warning) 35%, var(--sf-border));
   color: var(--sf-warning);
-  font-weight: 750;
+  font-weight: 520;
 }
 
 .topbar-spacer,
@@ -966,7 +1065,7 @@ onUnmounted(() => {
 
   > span {
     color: var(--sf-text-disabled);
-    font-size: 10px;
+    font-size: 11px;
   }
 
   :deep(.el-select) {
@@ -1009,11 +1108,11 @@ onUnmounted(() => {
   width: 16px;
   height: 13px;
   border: 1.5px solid currentColor;
-  border-radius: 3px;
+  border-radius: 4px;
 
   &::after {
     position: absolute;
-    border-radius: 1px;
+    border-radius: 2px;
     background: currentColor;
     content: '';
   }
@@ -1046,7 +1145,7 @@ onUnmounted(() => {
   height: 30px;
   flex: none;
   border: 0;
-  border-radius: 7px;
+  border-radius: 6px;
   background: transparent;
   color: var(--sf-text-secondary);
   cursor: pointer;
@@ -1071,12 +1170,12 @@ onUnmounted(() => {
 
 .activity-bar {
   display: flex;
-  width: 48px;
+  width: 64px;
   flex: none;
   flex-direction: column;
-  gap: 5px;
-  padding: 8px 5px;
-  border-right: 1px solid var(--sf-border);
+  gap: 10px;
+  padding: 10px 6px;
+  border-right: 1px solid var(--sf-border-light);
   background: var(--sf-bg-secondary);
 
   button {
@@ -1085,36 +1184,39 @@ onUnmounted(() => {
     align-items: center;
     justify-content: center;
     position: relative;
-    height: 46px;
+    height: 54px;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
     border: 0;
-    border-radius: 9px;
+    border-radius: 10px;
     background: transparent;
     color: var(--sf-text-secondary);
     cursor: pointer;
 
     svg {
-      width: 18px;
+      width: 20px;
+      transition:
+        fill 120ms ease,
+        stroke-width 120ms ease;
     }
 
     span {
-      font-size: 9px;
+      font-size: 11px;
     }
 
     em {
       display: grid;
       position: absolute;
-      top: 3px;
-      right: 2px;
-      min-width: 15px;
-      height: 15px;
-      padding: 0 3px;
+      top: 2px;
+      right: 1px;
+      min-width: 17px;
+      height: 17px;
+      padding: 0 4px;
       border: 2px solid var(--sf-bg-secondary);
       border-radius: 999px;
       background: var(--sf-danger);
       color: white;
-      font-size: 8px;
+      font-size: 10px;
       font-style: normal;
       place-items: center;
     }
@@ -1125,9 +1227,14 @@ onUnmounted(() => {
     }
 
     &.active {
-      background: linear-gradient(145deg, var(--sf-brand), #6d62ea);
+      background: linear-gradient(135deg, var(--sf-brand) 0%, var(--sf-brand-active) 100%);
       color: white;
-      box-shadow: 0 6px 16px color-mix(in srgb, var(--sf-brand) 24%, transparent);
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--sf-brand) 12%, transparent);
+
+      svg {
+        fill: currentColor;
+        stroke-width: 2.2;
+      }
     }
   }
 
@@ -1180,7 +1287,7 @@ onUnmounted(() => {
 
   &::after {
     position: absolute;
-    border-radius: 2px;
+    border-radius: 4px;
     background: transparent;
     content: '';
     transition: background 120ms ease;
@@ -1249,7 +1356,7 @@ onUnmounted(() => {
   border-top: 1px solid var(--sf-border-light);
   background: color-mix(in srgb, var(--sf-bg-secondary) 88%, var(--sf-brand-soft));
   color: var(--sf-text-secondary);
-  font-size: 9px;
+  font-size: 11px;
 
   > span {
     display: flex;
@@ -1327,6 +1434,47 @@ onUnmounted(() => {
 
   .project-context {
     min-width: 0;
+  }
+}
+
+// 离开 Project 确认弹窗：与归档 Project、移除 Robot Skill 等确认弹窗保持同一结构
+.leave-project-dialog {
+  :deep(.el-dialog__body) {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .leave-confirm-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 8px 16px 16px;
+  }
+
+  .leave-icon {
+    width: 96px;
+    height: 96px;
+    margin-bottom: 24px;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  .leave-confirm-title {
+    margin: 0 0 8px;
+    color: var(--sf-text-primary);
+    font-size: 17px;
+    font-weight: 500;
+  }
+
+  .leave-confirm-desc {
+    margin: 0;
+    color: var(--sf-text-secondary);
+    font-size: 14px;
+    line-height: 1.7;
   }
 }
 </style>

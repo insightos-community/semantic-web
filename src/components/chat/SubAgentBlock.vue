@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <!-- 委派块（R14，17-web-ui-design §6.1 时间线卡片）：SubAgent 委派过程呈现。
        数据契约（chat store _applySubAgent 产出，与本组件共享同一响应式对象）：
@@ -25,25 +8,35 @@ limitations under the License.
   <div class="subagent-block" :class="`is-${delegation.status}`">
     <div class="block-bar" :style="{ background: accentColor }" />
     <div class="block-main">
-      <button
-        type="button"
-        class="block-head"
-        :title="isRunning ? '委派执行中' : expanded ? '收起结果' : '展开结果'"
-        @click="onToggle"
+      <el-tooltip
+        :content="isRunning ? '委派执行中' : expanded ? '收起结果' : '展开结果'"
+        effect="dark"
+        :show-after="500"
+        placement="top"
       >
-        <el-icon class="status-icon" :class="{ 'is-loading': isRunning }">
-          <Loading v-if="isRunning" />
-          <CircleCheckFilled v-else />
-        </el-icon>
-        <span class="head-route" :style="{ color: accentColor }">
-          Leader → {{ delegation.agentName }}
-        </span>
-        <span class="head-task" :title="delegation.task">{{ taskSummary }}</span>
-        <span class="head-time">{{ timeText }}</span>
-        <el-icon v-if="!isRunning" class="head-arrow" :class="{ expanded }">
-          <ArrowDown />
-        </el-icon>
-      </button>
+        <button type="button" class="block-head" @click="onToggle">
+          <el-icon class="status-icon" :class="{ 'is-loading': isRunning }">
+            <Loading v-if="isRunning" />
+            <CircleCheckFilled v-else />
+          </el-icon>
+          <span class="head-route" :style="{ color: accentColor }">
+            Leader → {{ delegation.agentName }}
+          </span>
+          <el-tooltip
+            :content="delegation.task"
+            :disabled="!delegation.task"
+            effect="dark"
+            :show-after="500"
+            placement="top"
+          >
+            <span class="head-task">{{ taskSummary }}</span>
+          </el-tooltip>
+          <span class="head-time">{{ timeText }}</span>
+          <el-icon v-if="!isRunning" class="head-arrow" :class="{ expanded }">
+            <ArrowDown />
+          </el-icon>
+        </button>
+      </el-tooltip>
       <div v-if="bodyVisible" class="block-body">
         <div class="subagent-content">
           <div v-if="delegation.tools?.length" class="subagent-tools">
@@ -167,7 +160,7 @@ const timeText = computed(() => {
 
 .head-route {
   flex: none;
-  font-weight: 600;
+  font-weight: 520;
 }
 
 .head-task {

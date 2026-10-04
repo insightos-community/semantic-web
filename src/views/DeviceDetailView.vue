@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <div class="device-detail" data-testid="device-detail">
     <header class="detail-header">
@@ -73,16 +56,21 @@ limitations under the License.
         <section v-if="activeTab === 'overview'" class="device-records">
           <label
             >执行记录
-            <select
+            <el-select
+              :model-value="''"
               aria-label="查看设备执行记录"
-              value=""
-              @change="openExecution(history.find((item) => item.id === $event.target.value))"
+              class="records-select"
+              placeholder="在所属 Project 底部查看"
+              size="small"
+              @change="(id) => openExecution(history.find((item) => item.id === id))"
             >
-              <option value="" disabled>在所属 Project 底部查看</option>
-              <option v-for="item in history" :key="item.id" :value="item.id">
-                {{ item.skill_name || item.id }} · {{ item.status }} · {{ item.created_at }}
-              </option>
-            </select>
+              <el-option
+                v-for="item in history"
+                :key="item.id"
+                :label="`${item.skill_name || item.id} · ${item.status} · ${item.created_at}`"
+                :value="item.id"
+              />
+            </el-select>
           </label>
           <details>
             <summary>传感与证据</summary>
@@ -228,7 +216,7 @@ onBeforeUnmount(() => subscription?.stop())
   display: grid;
   width: 42px;
   height: 42px;
-  border-radius: 11px;
+  border-radius: 12px;
   background: var(--sf-brand-soft);
   color: var(--sf-brand);
   place-items: center;
@@ -249,7 +237,7 @@ onBeforeUnmount(() => subscription?.stop())
 .eyebrow {
   color: var(--sf-role-robot);
   font-size: var(--sf-font-xs);
-  font-weight: 800;
+  font-weight: 380;
   letter-spacing: 0.11em;
 }
 .header-status {
@@ -268,13 +256,16 @@ onBeforeUnmount(() => subscription?.stop())
   gap: 10px;
   align-items: center;
 }
-.device-records select {
+.device-records .records-select {
   max-width: 80%;
-  padding: 7px;
-  border: 1px solid var(--sf-border-light);
-  border-radius: 6px;
-  background: var(--sf-bg-secondary);
-  color: var(--sf-text-primary);
+  flex: 1;
+  min-width: 0;
+  :deep(.el-select__wrapper) {
+    height: 32px;
+    min-height: 32px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
 }
 .device-records details {
   margin-top: 14px;
@@ -315,7 +306,7 @@ onBeforeUnmount(() => subscription?.stop())
 }
 .detail-tabs button.active {
   color: var(--sf-brand);
-  font-weight: 650;
+  font-weight: 520;
 }
 .detail-tabs button.active::after {
   position: absolute;
@@ -323,7 +314,7 @@ onBeforeUnmount(() => subscription?.stop())
   bottom: 0;
   left: 9px;
   height: 2px;
-  border-radius: 2px;
+  border-radius: 4px;
   background: var(--sf-brand);
   content: '';
 }
@@ -333,9 +324,6 @@ onBeforeUnmount(() => subscription?.stop())
   overflow: auto;
 }
 .overview,
-.skills-panel,
-.abilities-panel,
-.artifacts-panel,
 .history-panel {
   max-width: 1180px;
   margin: auto;
@@ -350,8 +338,8 @@ onBeforeUnmount(() => subscription?.stop())
   display: flex;
   min-width: 0;
   padding: 14px;
-  border: 1px solid var(--sf-border-light);
-  border-radius: 10px;
+  border: 0;
+  border-radius: 8px;
   background: var(--sf-bg-secondary);
   flex-direction: column;
   gap: 6px;
@@ -373,8 +361,8 @@ onBeforeUnmount(() => subscription?.stop())
 .current-card {
   margin-top: 14px;
   padding: 18px;
-  border: 1px solid var(--sf-border-light);
-  border-radius: 11px;
+  border: 0;
+  border-radius: 12px;
   background: var(--sf-bg-secondary);
 }
 .current-card > header {
@@ -422,7 +410,7 @@ onBeforeUnmount(() => subscription?.stop())
   margin-top: 14px;
   padding: 14px;
   border: 1px solid color-mix(in srgb, var(--sf-info) 25%, transparent);
-  border-radius: 9px;
+  border-radius: 8px;
   background: color-mix(in srgb, var(--sf-info) 6%, var(--sf-bg-secondary));
 }
 .boundary-note svg {
@@ -461,7 +449,7 @@ onBeforeUnmount(() => subscription?.stop())
   text-align: left;
 }
 .history-panel > button:first-of-type {
-  border-radius: 9px 9px 0 0;
+  border-radius: 8px 9px 0 0;
 }
 .history-panel > button:last-of-type {
   border-bottom: 1px solid var(--sf-border-light);

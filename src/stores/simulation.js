@@ -1,18 +1,3 @@
-// Copyright 2026 InsightOS
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 import { defineStore } from 'pinia'
 import * as simulationApi from '@/api/simulation'
 
@@ -113,6 +98,17 @@ export const useSimulationStore = defineStore('simulation', {
     error: ''
   }),
   getters: {
+    sceneTransitioning: (state) =>
+      ['starting', 'resetting', 'stopping'].includes(state.instance?.state),
+    sceneStartTimeoutMilliseconds: (state) => {
+      const profileId = state.instance?.runtime_profile_id || state.selectedRuntimeProfileId
+      const seconds = Number(
+        state.runtimeProfiles.find((profile) => profile.runtime_profile_id === profileId)
+          ?.scene_start_timeout_seconds
+      )
+      // 使用 Runtime 声明的原生加载预算，与 Server 一致；HTTP 单次查询仍短超时。
+      return Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : 180_000
+    },
     hasRuntimeProfile: (state) => Boolean(state.runtimePreference.runtime_profile_id),
     compatibleRuntimeInstallations: (state) =>
       state.runtimePreference.compatible_runtime_installations || [],
@@ -347,6 +343,11 @@ export const useSimulationStore = defineStore('simulation', {
       // 不能覆盖 instance.state，否则用户无法区分“最后在运行”和“Runtime 已失联”。
       const activeInstance = snapshot.instance?.state === 'stopped' ? null : snapshot.instance
       this.instance = activeInstance || null
+      // 页面刷新从 Server 快照恢复选择，不能只在本页启动场景时赋值。
+      this.catalogSceneId = snapshot.catalog_scene_id || ''
+      this.sceneVersion = snapshot.scene_version || ''
+      this.variantId = snapshot.variant_id || activeInstance?.layout || ''
+      this.evaluationDescriptor = snapshot.evaluation_descriptor || null
       this.recovery = deriveRecovery(snapshot, this.runtime)
       this.evaluation = snapshot.evaluation || null
       this.robots = snapshot.robots || []
@@ -551,7 +552,7 @@ export const useSimulationStore = defineStore('simulation', {
           runtime_installation_id: options.runtime_installation_id || '',
           seed: Number(options.seed || 0),
           headless: options.headless !== false,
-          render_backend: options.render_backend || 'auto'
+          render_backend: options.render_backend || 'egl'
         }
       )
       this.instance = response.instance
@@ -575,9 +576,8 @@ export const useSimulationStore = defineStore('simulation', {
       // 不要求用户再点击“重新检查”才能把离线观测刷新为在线。
       await this.refreshRuntimeOverview()
       if (this.instance?.state === 'starting') {
-        // starting 是一次已经成功创建的异步实例，不应把 SceneDetails 按钮锁住
-        // 直到 MuJoCo、地图和受管 Robot 全部上线。页面先保留该实例并打开
-        // Viewer；后台只观察同一 instance，终态失败会进入事件/问题区。
+        // 请求已接受，页面显示加载状态；后台观察同一实例。场景就绪前保留
+        // 查看状态入口，但暂不允许重复切换 Layout，避免多个生命周期操作排队。
         this.record('scene', '场景启动请求已接受，正在加载 Runtime 与 Robot', this.instance)
         void this.observeStartedScene(this.instance.instance_id)
         return this.instance
@@ -587,7 +587,9 @@ export const useSimulationStore = defineStore('simulation', {
     },
     async observeStartedScene(instanceId) {
       try {
-        await this.waitForSceneState(['running', 'paused'], { timeoutMilliseconds: 180_000 })
+        await this.waitForSceneState(['running', 'paused'], {
+          timeoutMilliseconds: this.sceneStartTimeoutMilliseconds
+        })
         if (this.instance?.instance_id !== instanceId) return
         await this.refreshRuntimeData()
         this.record('scene', `场景已进入 ${this.instance.state}`, this.instance)
@@ -600,6 +602,7 @@ export const useSimulationStore = defineStore('simulation', {
     },
     async switchVariant(variantId, seed = 0) {
       if (!this.instance) throw new Error('当前没有活动场景')
+      if (this.sceneTransitioning) throw new Error('场景正在加载或切换，请等待当前操作完成')
       const response = await simulationApi.switchProjectSceneVariant(
         this.projectId,
         this.instance.instance_id,
@@ -612,7 +615,9 @@ export const useSimulationStore = defineStore('simulation', {
       this.instance = response.instance
       this.variantId = variantId
       this.commands = []
-      await this.waitForSceneState(['running', 'paused'])
+      await this.waitForSceneState(['running', 'paused'], {
+        timeoutMilliseconds: this.sceneStartTimeoutMilliseconds
+      })
       await this.refreshRuntimeData()
       return this.instance
     },
@@ -679,7 +684,7 @@ export const useSimulationStore = defineStore('simulation', {
         layout: options.layout,
         seed: Number(options.seed || 0),
         headless: options.headless !== false,
-        render_backend: options.render_backend || 'auto'
+        render_backend: options.render_backend || 'egl'
       })
       this.instance = response.instance
       this.record('scene', `场景 ${sceneKey} 启动请求已接受`, response.instance)
@@ -764,8 +769,11 @@ export const useSimulationStore = defineStore('simulation', {
           throw new Error(`等待场景 ${instanceId} 进入 ${[...expected].join('/')} 超时${detail}`)
         }
         await sleep(intervalMilliseconds)
+        if (this.instance?.instance_id !== instanceId) return null
         try {
           const response = await simulationApi.getSceneInstance(this.projectId, instanceId)
+          // 切换项目或实例后，旧轮询的迟到响应不能把旧现场恢复到页面。
+          if (this.instance?.instance_id !== instanceId) return null
           this.instance = response.instance
           lastPollingError = null
         } catch (error) {

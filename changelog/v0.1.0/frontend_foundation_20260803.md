@@ -10,11 +10,11 @@
 
 ## 内容
 
-- **工程化**：依赖按 17-web-ui-design `2 技术栈补齐（element-plus / icons-vue / sass-embedded /
+- **工程化**：依赖按 17-web-ui-design §2 技术栈补齐（element-plus / icons-vue / sass-embedded /
   markdown-it / highlight.js / dompurify / echarts / vue3-toastify / pinia-plugin-persistedstate）；
   vite 增加 `@` 别名与 vitest 配置；eslint 9 flat config（vue/recommended，版式规则让位 prettier）
   + prettier（semi:false / singleQuote / trailingComma:none）。
-- **目录结构**：与 17 文档 `2 对齐——`src/{api,ws,stores,views,components/{base,chat,task,agent,
+- **目录结构**：与 17 文档 §2 对齐——`src/{api,ws,stores,views,components/{base,chat,task,agent,
   device,map,studio,trace,artifact},router,utils,styles}`；旧 `src/store` 与
   `components/{monitoring,project,workflow}` 空目录已迁移/移除。
 - **设计令牌** `styles/tokens.scss`：暗色主主题（--sf-bg-*、--sf-brand、角色色 --sf-role-*、
@@ -37,7 +37,7 @@
 ## 影响面
 
 - 纯新增，无对外 API 变更；后端契约按 14-frontend-api 消费，未要求后端改动。
-- CI 配置 三个阶段（lint/test/build）与本地脚本一致，未改动；gitleaks 阶段保留。
+- `.gitlab-ci.yml` 三个阶段（lint/test/build）与本地脚本一致，未改动；gitleaks 阶段保留。
 - 依赖变更：新增 pinia 3（pinia-plugin-persistedstate 4.7 的 peer 要求 pinia>=3）；
   markdown-it/highlight.js/dompurify/echarts 已装未用（F3/F4 消费，属技术栈清单内）。
 

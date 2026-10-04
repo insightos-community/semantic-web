@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <section class="plan-document">
     <header>
@@ -274,8 +257,8 @@ async function discard() {
 .plan-document > header span,
 .todo-section header span {
   color: var(--sf-brand);
-  font-size: 10px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 380;
   letter-spacing: 0.1em;
 }
 
@@ -351,7 +334,7 @@ h1 {
   }
   span {
     color: var(--sf-text-disabled);
-    font-size: 10px;
+    font-size: 11px;
   }
   b {
     color: var(--sf-text-primary);
@@ -403,7 +386,7 @@ h1 {
 .todo-list article small,
 .todo-list article > span {
   color: var(--sf-text-disabled);
-  font-size: 10px;
+  font-size: 11px;
 }
 .plan-document > footer {
   align-items: center;

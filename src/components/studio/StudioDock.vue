@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <div
     ref="host"
@@ -490,7 +473,11 @@ defineExpose({
   height: 100%;
 }
 
-.studio-dock :deep(.dv-dockview) {
+/* Dockview 的“溢出选项卡”弹层渲染在与 .dv-dockview 同级的
+ * .dv-popover-anchor（shell 内）里，二者必须同时挂上主题变量，
+ * 否则弹层只会继承 dockview 内置深色主题变量，导致亮色下仍发暗。 */
+.studio-dock :deep(.dv-dockview),
+.studio-dock :deep(.dv-popover-anchor) {
   --dv-activegroup-visiblepanel-tab-background-color: var(--sf-bg-secondary);
   --dv-activegroup-hiddenpanel-tab-background-color: var(--sf-bg-tertiary);
   --dv-inactivegroup-visiblepanel-tab-background-color: var(--sf-bg-tertiary);

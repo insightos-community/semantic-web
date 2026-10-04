@@ -1,36 +1,20 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <aside class="sf-side-list" :class="{ 'is-collapsed': collapsed }" :style="asideStyle">
     <template v-if="!collapsed">
       <header class="side-list-header">
         <span class="side-list-title"><slot name="title" /></span>
         <span class="side-list-actions"><slot name="actions" /></span>
-        <button
-          v-if="collapsible"
-          type="button"
-          class="side-list-toggle"
-          title="收起列表"
-          aria-label="收起列表"
-          @click="collapsed = true"
-        >
-          <el-icon><Fold /></el-icon>
-        </button>
+        <el-tooltip content="收起列表" effect="dark" :show-after="500" placement="bottom">
+          <button
+            v-if="collapsible"
+            type="button"
+            class="side-list-toggle"
+            aria-label="收起列表"
+            @click="collapsed = true"
+          >
+            <el-icon><Fold /></el-icon>
+          </button>
+        </el-tooltip>
       </header>
       <div v-if="$slots.search" class="side-list-search">
         <slot name="search" />
@@ -42,16 +26,16 @@ limitations under the License.
         <slot name="footer" />
       </footer>
     </template>
-    <button
-      v-else
-      type="button"
-      class="side-list-toggle expand-rail"
-      title="展开列表"
-      aria-label="展开列表"
-      @click="collapsed = false"
-    >
-      <el-icon><Expand /></el-icon>
-    </button>
+    <el-tooltip v-else content="展开列表" effect="dark" :show-after="500" placement="right">
+      <button
+        type="button"
+        class="side-list-toggle expand-rail"
+        aria-label="展开列表"
+        @click="collapsed = false"
+      >
+        <el-icon><Expand /></el-icon>
+      </button>
+    </el-tooltip>
   </aside>
 </template>
 
@@ -110,7 +94,7 @@ const asideStyle = computed(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: var(--sf-font-md);
-  font-weight: 600;
+  font-weight: 520;
   color: var(--sf-text-primary);
 }
 

@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <section class="current-work" data-testid="studio-current-work">
     <button type="button" class="work-summary" @click="inspect">
@@ -61,15 +44,7 @@ limitations under the License.
       <el-button v-if="current" size="small" @click="inspect">详情</el-button>
       <el-button v-else-if="displayed" size="small" @click="inspect">查看结果</el-button>
       <el-button v-if="current" size="small" type="danger" plain :loading="stopping" @click="stop">
-        {{
-          current.kind === 'run'
-            ? current.value.robot_id
-              ? '停止请求'
-              : '停止生成'
-            : current.value.status === 'stopping'
-              ? '重试停止'
-              : '停止执行'
-        }}
+        {{ stopLabel }}
       </el-button>
     </span>
   </section>
@@ -77,7 +52,7 @@ limitations under the License.
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { useWorkflowStore } from '@/stores/workflow'
+import { useWorkflowStore, workflowStopMode } from '@/stores/workflow'
 import { useRobotStore } from '@/stores/robot'
 import { useRunsStore } from '@/stores/runs'
 import { useProjectStore } from '@/stores/project'
@@ -87,6 +62,7 @@ import { useExecutionScopeStore } from '@/stores/executionScope'
 import { useDeviceStore } from '@/stores/device'
 import { currentProjectWork, projectWorkProgress } from '@/studio/currentWork'
 import { openStudioPanel } from '@/studio/panelService'
+import { stopWorkflowFromUI } from '@/studio/stopWorkflow'
 
 const workflows = useWorkflowStore()
 const robots = useRobotStore()
@@ -155,8 +131,27 @@ const label = computed(() =>
     ? 'Robot 请求'
     : { workflow: 'Workflow', execution: '技能调试', run: 'Agent' }[displayed.value?.kind]
 )
+// 顶栏停止按钮与 Workflow 详情面板共用同一套停止语义：物理状态未知时普通 stop
+// 无法收敛，按钮必须直接引导人工安全确认，而不是反复发一个会被回退的 stop。
+const stopMode = computed(() =>
+  current.value?.kind === 'workflow' ? workflowStopMode(current.value.value) : ''
+)
+const stopLabel = computed(() => {
+  const item = current.value
+  if (!item) return ''
+  if (item.kind === 'run') return item.value.robot_id ? '停止请求' : '停止生成'
+  if (item.kind === 'workflow') {
+    if (stopMode.value === 'unknown') return '确认停止'
+    if (stopMode.value === 'retry') return '重试停止'
+    return '停止执行'
+  }
+  // 技能调试执行沿用原有的重试提示，不改变既有交互文案。
+  return ['stopping', 'interrupted'].includes(item.value.status) ? '重试停止' : '停止执行'
+})
 const statusTone = computed(() =>
-  ['paused', 'failed', 'stopped', 'cancelled', 'canceled'].includes(displayed.value?.value.status)
+  ['paused', 'interrupted', 'failed', 'stopped', 'cancelled', 'canceled'].includes(
+    displayed.value?.value.status
+  )
     ? 'warning'
     : current.value
       ? 'running'
@@ -173,6 +168,7 @@ const stateLabel = computed(
       waiting_agent: '等待 Agent',
       waiting_input: '等待输入',
       stopping: '停止中',
+      interrupted: '停止待确认',
       cancelling: '停止中',
       completed: '已完成',
       failed: '失败',
@@ -196,14 +192,26 @@ async function stop() {
   if (!item || stopping.value) return
   stopping.value = true
   try {
-    if (item.kind === 'workflow') await workflows.transitionById(item.value.id, 'stop')
-    else if (item.kind === 'execution') await robots.stop(item.value)
+    if (item.kind === 'workflow') {
+      await stopWorkflowFromUI(workflows, ui, item.value.id, currentWorkflowTasks(item.value.id), {
+        view: workflowViews.value[item.value.id]
+      })
+    } else if (item.kind === 'execution') await robots.stop(item.value)
     else await runs.cancel(item.value.id)
   } catch (error) {
     ui.notify({ type: 'error', message: error.message || '停止失败' })
   } finally {
     stopping.value = false
   }
+}
+
+// 人工安全确认弹框需要列出受影响的 Robot Execution；优先用当前视图，其次退回
+// store 中已缓存的 Task 列表，避免因列表尚未同步而漏报现场。
+function currentWorkflowTasks(workflowId) {
+  return (
+    workflowViews.value[workflowId]?.tasks ||
+    workflows.tasks.filter((task) => task.workflow_id === workflowId)
+  )
 }
 </script>
 

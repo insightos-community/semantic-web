@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <section class="runtime-settings">
     <header>
@@ -25,14 +8,25 @@ limitations under the License.
         <details class="install-hint">
           <summary>添加运行环境</summary>
           <p>
-            管理员首次安装使用 <code>semantic runtime install &lt;pack@version&gt;</code>， 然后执行
+            CLI 安装使用 <code>semantic install runtime &lt;pack@version&gt;</code>， 然后执行
             <code>semantic runtime doctor --all</code>。
           </p>
         </details>
       </div>
-      <el-button :loading="loading" @click="load">刷新</el-button>
+      <div>
+        <el-button type="primary" :disabled="!project.currentProjectId" @click="importOpen = true"
+          >导入 Runtime 包</el-button
+        >
+        <el-button :loading="loading" @click="reloadCatalog">刷新安装目录</el-button>
+      </div>
     </header>
 
+    <ProjectImportDialog
+      v-model="importOpen"
+      :project-id="project.currentProjectId"
+      :editable="project.currentProject?.mode === 'development'"
+      @imported="load"
+    />
     <el-alert
       v-if="restartRequired"
       type="warning"
@@ -136,6 +130,14 @@ limitations under the License.
           >
             停止受管进程
           </el-button>
+          <el-button
+            size="small"
+            type="danger"
+            plain
+            :loading="pending(item.installation_id, 'uninstall')"
+            @click="uninstall(item)"
+            >卸载 Runtime</el-button
+          >
         </div>
       </article>
     </div>
@@ -147,8 +149,21 @@ import { onMounted, ref } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import * as simulationApi from '@/api/simulation'
 import { useUiStore } from '@/stores/ui'
+import { useProjectStore } from '@/stores/project'
+import ProjectImportDialog from '@/components/studio/ProjectImportDialog.vue'
 
 const ui = useUiStore()
+const project = useProjectStore()
+const importOpen = ref(false)
+async function reloadCatalog() {
+  try {
+    await simulationApi.reloadRuntimeResources()
+    restartRequired.value = false
+    await load()
+  } catch (err) {
+    error.value = err.message
+  }
+}
 const installations = ref([])
 const loading = ref(false)
 const error = ref('')
@@ -222,6 +237,24 @@ const stop = (item) =>
   run(item, 'stop', simulationApi.stopRuntimeInstallation, (response) =>
     response.managed_process_stopped ? '受管 Runtime 已停止' : '当前没有 Framework 启动的进程'
   )
+
+async function uninstall(item) {
+  try {
+    await ElMessageBox.confirm(
+      '卸载此 Runtime 的安装环境？独立场景包、模型和项目历史会保留。请先停止受管进程并解除项目安装偏好。',
+      '卸载 Runtime',
+      { type: 'warning' }
+    )
+  } catch {
+    return
+  }
+  await run(
+    item,
+    'uninstall',
+    simulationApi.uninstallRuntime,
+    () => 'Runtime 已卸载，独立场景和模型保留'
+  )
+}
 
 // 启用状态是管理员清单的一部分。二次确认用于避免停用正在被 Project
 // 引用的安装；Server 仍会先回收受管进程，再原子写回唯一的 enabled 字段。

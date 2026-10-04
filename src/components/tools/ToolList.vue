@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <div class="tool-list">
     <div v-for="group in groups" :key="group.category" class="tool-group">
@@ -22,25 +5,32 @@ limitations under the License.
         <span>{{ group.category }}</span>
         <span>{{ group.tools.length }}</span>
       </div>
-      <button
+      <el-tooltip
         v-for="tool in group.tools"
         :key="tool.key"
-        type="button"
-        class="tool-item"
-        :class="{ 'is-active': tool.key === activeKey }"
-        :title="tool.description"
-        @click="$emit('select', tool.key)"
+        :content="tool.description"
+        :disabled="!tool.description"
+        effect="dark"
+        :show-after="500"
+        placement="right"
       >
-        <span class="tool-heading">
-          <span class="tool-name">{{ tool.name }}</span>
-          <i
-            class="health-dot"
-            :class="tool.health === 'unavailable' ? 'is-unavailable' : 'is-healthy'"
-          />
-        </span>
-        <span class="tool-desc">{{ tool.description || '暂无描述' }}</span>
-        <span class="tool-meta">{{ tool.sourceTitle }} · {{ tool.risk || 'low' }}</span>
-      </button>
+        <button
+          type="button"
+          class="tool-item"
+          :class="{ 'is-active': tool.key === activeKey }"
+          @click="$emit('select', tool.key)"
+        >
+          <span class="tool-heading">
+            <span class="tool-name">{{ tool.name }}</span>
+            <i
+              class="health-dot"
+              :class="tool.health === 'unavailable' ? 'is-unavailable' : 'is-healthy'"
+            />
+          </span>
+          <span class="tool-desc">{{ tool.description || '暂无描述' }}</span>
+          <span class="tool-meta">{{ tool.sourceTitle }} · {{ tool.risk || 'low' }}</span>
+        </button>
+      </el-tooltip>
     </div>
     <div v-if="groups.length === 0" class="list-empty">没有符合条件的工具</div>
   </div>
@@ -110,7 +100,7 @@ defineEmits(['select'])
   color: var(--sf-text-primary);
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: var(--sf-font-sm);
-  font-weight: 650;
+  font-weight: 520;
   text-overflow: ellipsis;
   white-space: nowrap;
 }

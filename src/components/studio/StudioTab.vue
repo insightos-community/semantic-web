@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <div
     class="studio-tab"
@@ -22,12 +5,32 @@ limitations under the License.
     @dblclick.stop="keepOpen"
     @auxclick="closeWithMiddleButton"
   >
-    <span v-if="tabMode === 'pinned'" class="pin-marker" title="已置顶">◆</span>
-    <i v-if="dirty" class="dirty-dot" title="有未保存修改" />
-    <span :title="title">{{ title }}</span>
-    <button v-if="!permanent" type="button" title="关闭" aria-label="关闭标签" @click.stop="close">
-      <Close />
-    </button>
+    <el-tooltip
+      v-if="tabMode === 'pinned'"
+      content="已置顶"
+      effect="dark"
+      :show-after="500"
+      placement="bottom"
+    >
+      <span class="pin-marker">◆</span>
+    </el-tooltip>
+    <el-tooltip
+      v-if="dirty"
+      content="有未保存修改"
+      effect="dark"
+      :show-after="500"
+      placement="bottom"
+    >
+      <i class="dirty-dot" />
+    </el-tooltip>
+    <el-tooltip :content="title" effect="dark" :show-after="500" placement="bottom">
+      <span>{{ title }}</span>
+    </el-tooltip>
+    <el-tooltip v-if="!permanent" content="关闭" effect="dark" :show-after="500" placement="bottom">
+      <button type="button" aria-label="关闭标签" @click.stop="close">
+        <Close />
+      </button>
+    </el-tooltip>
   </div>
 </template>
 

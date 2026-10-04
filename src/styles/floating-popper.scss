@@ -1,0 +1,295 @@
+// ============================================================================
+// Semantic v1.0 · 统一浮窗样式（tooltip / popover / select 下拉 / toast）
+// 覆盖 Element Plus 默认 el-popper，统一为「白色玻璃质感」浮窗语言。
+//
+// 定稿方向：解释型 Tooltip 采用用户参考图的深灰浮窗；富内容 Popover/Select 继续使用白玻璃。
+// 解释 Tooltip 以纯文字为主，不承载复杂表单，因此不需要额外的内容层换肤。
+// 视觉依据：用户参考图 —— 深灰底、白字、圆角、柔和阴影；hover 后延迟 500ms。
+// ============================================================================
+
+// ---- 解释型 Tooltip：用户参考图的深灰浮窗 ----
+// 仅用于纯文字的 hover 解释；不承载表单或复杂内容，因此不会产生内容层换肤问题。
+.el-popper.is-dark,
+.el-popper.el-tooltip:not(.el-popover):not(.el-select__popper):not(.el-dropdown__popper) {
+  background: rgba(58, 61, 77, 0.97) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(21, 23, 33, 0.38);
+  color: #fff !important;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+  padding: 6px 10px;
+  max-width: 280px;
+  white-space: normal;
+}
+
+// ---- 富内容 Popover / Select / Dropdown：继续使用白色玻璃 ----
+.el-popper.el-popover,
+.el-popper.el-dropdown__popper {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(2, 83, 253, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(2, 83, 253, 0.16);
+  color: var(--sf-text-primary, #14151f);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.el-popper.el-select__popper {
+  background: rgba(255, 255, 255, 0.97) !important;
+  border: 1px solid rgba(2, 83, 253, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(2, 83, 253, 0.16);
+}
+
+.el-popper.el-popover,
+.el-popper.el-dropdown__popper {
+  color: var(--sf-text-primary, #14151f);
+}
+
+// ---- 箭头：使用 Element Plus 的定位规则，让箭头成为与浮窗边缘连续的三角形 ----
+// Element Plus 默认箭头是旋转正方形；这里保留其几何定位，只显式隐藏不该显示的两条边。
+// 这样不会出现四边都有颜色的菱形，也不会影响 Popover/Select 的定位和交互。
+.el-popper.is-dark > .el-popper__arrow::before,
+.el-popper.el-tooltip:not(.el-popover):not(.el-select__popper):not(.el-dropdown__popper)
+  > .el-popper__arrow::before {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(58, 61, 77, 0.97) !important;
+}
+
+.el-popper.is-dark[data-popper-placement^='top'] > .el-popper__arrow::before,
+.el-popper.el-tooltip:not(.el-popover):not(.el-select__popper):not(
+    .el-dropdown__popper
+  )[data-popper-placement^='top']
+  > .el-popper__arrow::before {
+  border-top-color: transparent !important;
+  border-left-color: transparent !important;
+}
+.el-popper.is-dark[data-popper-placement^='bottom'] > .el-popper__arrow::before,
+.el-popper.el-tooltip:not(.el-popover):not(.el-select__popper):not(
+    .el-dropdown__popper
+  )[data-popper-placement^='bottom']
+  > .el-popper__arrow::before {
+  border-bottom-color: transparent !important;
+  border-right-color: transparent !important;
+}
+.el-popper.is-dark[data-popper-placement^='left'] > .el-popper__arrow::before,
+.el-popper.el-tooltip:not(.el-popover):not(.el-select__popper):not(
+    .el-dropdown__popper
+  )[data-popper-placement^='left']
+  > .el-popper__arrow::before {
+  border-bottom-color: transparent !important;
+  border-left-color: transparent !important;
+}
+.el-popper.is-dark[data-popper-placement^='right'] > .el-popper__arrow::before,
+.el-popper.el-tooltip:not(.el-popover):not(.el-select__popper):not(
+    .el-dropdown__popper
+  )[data-popper-placement^='right']
+  > .el-popper__arrow::before {
+  border-top-color: transparent !important;
+  border-right-color: transparent !important;
+}
+
+.el-popper.el-popover > .el-popper__arrow::before,
+.el-popper.el-dropdown__popper > .el-popper__arrow::before,
+.el-popper.el-select__popper > .el-popper__arrow::before {
+  border: 1px solid rgba(2, 83, 253, 0.1) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+.el-popper.el-popover[data-popper-placement^='top'] > .el-popper__arrow::before,
+.el-popper.el-dropdown__popper[data-popper-placement^='top'] > .el-popper__arrow::before,
+.el-popper.el-select__popper[data-popper-placement^='top'] > .el-popper__arrow::before {
+  border-top-color: transparent !important;
+  border-left-color: transparent !important;
+}
+.el-popper.el-popover[data-popper-placement^='bottom'] > .el-popper__arrow::before,
+.el-popper.el-dropdown__popper[data-popper-placement^='bottom'] > .el-popper__arrow::before,
+.el-popper.el-select__popper[data-popper-placement^='bottom'] > .el-popper__arrow::before {
+  border-bottom-color: transparent !important;
+  border-right-color: transparent !important;
+}
+.el-popper.el-popover[data-popper-placement^='left'] > .el-popper__arrow::before,
+.el-popper.el-dropdown__popper[data-popper-placement^='left'] > .el-popper__arrow::before,
+.el-popper.el-select__popper[data-popper-placement^='left'] > .el-popper__arrow::before {
+  border-bottom-color: transparent !important;
+  border-left-color: transparent !important;
+}
+.el-popper.el-popover[data-popper-placement^='right'] > .el-popper__arrow::before,
+.el-popper.el-dropdown__popper[data-popper-placement^='right'] > .el-popper__arrow::before,
+.el-popper.el-select__popper[data-popper-placement^='right'] > .el-popper__arrow::before {
+  border-top-color: transparent !important;
+  border-right-color: transparent !important;
+}
+
+// ---- Select 下拉选项：白玻璃语言，内容即浅色主题语义色 ----
+.el-popper.el-select__popper {
+  background: rgba(255, 255, 255, 0.97) !important; // 稍实一点便于读长列表
+  border: 1px solid rgba(2, 83, 253, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(2, 83, 253, 0.16);
+
+  .el-select-dropdown__item {
+    color: var(--sf-text-primary, #14151f);
+    border-radius: 6px;
+  }
+
+  .el-select-dropdown__item.hover,
+  .el-select-dropdown__item:hover {
+    background: var(--sf-bg-hover, #edf1fe);
+    color: var(--sf-text-primary, #14151f);
+  }
+
+  .el-select-dropdown__item.is-selected {
+    color: var(--sf-brand, #0253fd);
+    font-weight: 520;
+  }
+}
+
+// ---- el-dropdown（协作/规划等菜单）：同为白玻璃 popper ----
+.el-dropdown__popper.el-popper .el-dropdown-menu {
+  background: transparent;
+  background-color: transparent;
+}
+.el-popper.el-dropdown__popper .el-dropdown-menu__item:not(.is-disabled):focus,
+.el-popper.el-dropdown__popper .el-dropdown-menu__item:not(.is-disabled):hover {
+  background: var(--sf-bg-hover, #edf1fe);
+  color: var(--sf-text-primary, #14151f);
+}
+.el-popper.el-dropdown__popper .el-dropdown-menu__item:not(.is-disabled) {
+  color: var(--sf-text-primary, #14151f);
+}
+.el-popper.el-dropdown__popper .el-dropdown-menu__item.is-disabled {
+  color: var(--sf-text-disabled, #9aa0af);
+}
+
+// ---- 箭头几何兜底：使用真实 CSS 三角形，避免旋转正方形在不同浏览器中呈菱形 ----
+.el-popper > .el-popper__arrow {
+  z-index: 1;
+  overflow: visible;
+}
+// Popper 的箭头容器仍由 Element Plus 定位；这里只替换伪元素的绘制方式，
+// 不改变浮窗的尺寸计算、placement 或交互行为。
+.el-popper.is-dark > .el-popper__arrow::before,
+.el-popper.el-tooltip:not(.el-popover):not(.el-select__popper):not(.el-dropdown__popper)
+  > .el-popper__arrow::before {
+  width: 0 !important;
+  height: 0 !important;
+  border-style: solid !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  transform: none !important;
+  z-index: 1;
+}
+
+.el-popper.is-dark[data-popper-placement^='top'] > .el-popper__arrow::before,
+.el-popper.el-tooltip:not(.el-popover):not(.el-select__popper):not(
+    .el-dropdown__popper
+  )[data-popper-placement^='top']
+  > .el-popper__arrow::before {
+  top: 3px !important;
+  left: 50% !important;
+  margin-left: -6px;
+  border-width: 6px 6px 0 !important;
+  border-top-color: rgba(58, 61, 77, 0.97) !important;
+}
+.el-popper.is-dark[data-popper-placement^='bottom'] > .el-popper__arrow::before,
+.el-popper.el-tooltip:not(.el-popover):not(.el-select__popper):not(
+    .el-dropdown__popper
+  )[data-popper-placement^='bottom']
+  > .el-popper__arrow::before {
+  top: 1px !important;
+  left: 50% !important;
+  margin-left: -6px;
+  border-width: 0 6px 6px !important;
+  border-bottom-color: rgba(58, 61, 77, 0.97) !important;
+}
+.el-popper.is-dark[data-popper-placement^='left'] > .el-popper__arrow::before,
+.el-popper.el-tooltip:not(.el-popover):not(.el-select__popper):not(
+    .el-dropdown__popper
+  )[data-popper-placement^='left']
+  > .el-popper__arrow::before {
+  top: 50% !important;
+  left: 3px !important;
+  margin-top: -6px;
+  border-width: 6px 0 6px 6px !important;
+  border-left-color: rgba(58, 61, 77, 0.97) !important;
+}
+.el-popper.is-dark[data-popper-placement^='right'] > .el-popper__arrow::before,
+.el-popper.el-tooltip:not(.el-popover):not(.el-select__popper):not(
+    .el-dropdown__popper
+  )[data-popper-placement^='right']
+  > .el-popper__arrow::before {
+  top: 50% !important;
+  left: 1px !important;
+  margin-top: -6px;
+  border-width: 6px 6px 6px 0 !important;
+  border-right-color: rgba(58, 61, 77, 0.97) !important;
+}
+
+.el-popper.el-popover > .el-popper__arrow::before,
+.el-popper.el-dropdown__popper > .el-popper__arrow::before,
+.el-popper.el-select__popper > .el-popper__arrow::before {
+  width: 0 !important;
+  height: 0 !important;
+  border-style: solid !important;
+  border-width: 0 !important;
+  border-color: transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  transform: none !important;
+  z-index: 1;
+}
+
+.el-popper.el-popover[data-popper-placement^='top'] > .el-popper__arrow::before,
+.el-popper.el-dropdown__popper[data-popper-placement^='top'] > .el-popper__arrow::before,
+.el-popper.el-select__popper[data-popper-placement^='top'] > .el-popper__arrow::before {
+  top: 3px !important;
+  left: 50% !important;
+  margin-left: -6px;
+  border-width: 6px 6px 0 !important;
+  border-top-color: rgba(255, 255, 255, 0.92) !important;
+}
+.el-popper.el-popover[data-popper-placement^='bottom'] > .el-popper__arrow::before,
+.el-popper.el-dropdown__popper[data-popper-placement^='bottom'] > .el-popper__arrow::before,
+.el-popper.el-select__popper[data-popper-placement^='bottom'] > .el-popper__arrow::before {
+  top: 1px !important;
+  left: 50% !important;
+  margin-left: -6px;
+  border-width: 0 6px 6px !important;
+  border-bottom-color: rgba(255, 255, 255, 0.92) !important;
+}
+.el-popper.el-popover[data-popper-placement^='left'] > .el-popper__arrow::before,
+.el-popper.el-dropdown__popper[data-popper-placement^='left'] > .el-popper__arrow::before,
+.el-popper.el-select__popper[data-popper-placement^='left'] > .el-popper__arrow::before {
+  top: 50% !important;
+  left: 3px !important;
+  margin-top: -6px;
+  border-width: 6px 0 6px 6px !important;
+  border-left-color: rgba(255, 255, 255, 0.92) !important;
+}
+.el-popper.el-popover[data-popper-placement^='right'] > .el-popper__arrow::before,
+.el-popper.el-dropdown__popper[data-popper-placement^='right'] > .el-popper__arrow::before,
+.el-popper.el-select__popper[data-popper-placement^='right'] > .el-popper__arrow::before {
+  top: 50% !important;
+  left: 1px !important;
+  margin-top: -6px;
+  border-width: 6px 6px 6px 0 !important;
+  border-right-color: rgba(255, 255, 255, 0.92) !important;
+}
+
+// ---- Toast（vue3-toastify 走 .Toastify__toast，EP message 分支留 CSS 变量兜底）----
+.el-message {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 12px !important; // radius-lg
+  box-shadow: 0 8px 24px rgba(2, 83, 253, 0.16);
+  border: 1px solid rgba(2, 83, 253, 0.12) !important;
+}

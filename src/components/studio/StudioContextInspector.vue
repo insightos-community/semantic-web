@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <aside
     class="context-inspector"
@@ -23,7 +6,9 @@ limitations under the License.
   >
     <header v-if="!embedded" class="inspector-header">
       <strong>详情</strong>
-      <button type="button" title="关闭详情" @click="$emit('close')"><Close /></button>
+      <el-tooltip content="关闭详情" effect="dark" :show-after="500" placement="bottom">
+        <button type="button" @click="$emit('close')"><Close /></button>
+      </el-tooltip>
     </header>
 
     <div v-if="context" class="inspector-content">
@@ -33,14 +18,18 @@ limitations under the License.
           <span>{{ context.typeLabel }}</span>
           <h2>{{ context.title }}</h2>
         </div>
-        <button
+        <el-tooltip
           v-if="layout.selectedResource"
-          type="button"
-          title="清除当前选择"
-          @click="layout.select(null)"
+          content="清除当前选择"
+          effect="dark"
+          :show-after="500"
+          :persistent="false"
+          placement="left"
         >
-          <Close />
-        </button>
+          <button type="button" @click="layout.select(null)">
+            <Close />
+          </button>
+        </el-tooltip>
       </section>
 
       <section v-if="context.status" class="status-card">
@@ -1016,7 +1005,7 @@ function selectMapEntity(entity) {
   display: flex;
   height: calc(100% - 16px);
   margin: 8px 8px 8px 0;
-  border: 1px solid var(--sf-border-light);
+  border: 0;
   border-radius: var(--sf-radius-lg);
   overflow: hidden;
   min-width: 0;
@@ -1070,7 +1059,7 @@ function selectMapEntity(entity) {
   grid-template-columns: 42px minmax(0, 1fr) 28px;
   gap: 11px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--sf-border-light);
+  border-bottom: 0;
 
   .object-icon {
     display: grid;
@@ -1088,8 +1077,8 @@ function selectMapEntity(entity) {
 
   span {
     color: var(--sf-text-disabled);
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 11px;
+    font-weight: 380;
     letter-spacing: 0.08em;
   }
 
@@ -1129,7 +1118,7 @@ function selectMapEntity(entity) {
   gap: 10px;
   margin-top: 15px;
   padding: 11px 12px;
-  border: 1px solid var(--sf-border-light);
+  border: 0;
   border-radius: var(--sf-radius-lg);
   background: var(--sf-bg-tertiary);
 
@@ -1140,7 +1129,7 @@ function selectMapEntity(entity) {
 
   span {
     color: var(--sf-text-disabled);
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: 0.08em;
   }
 
@@ -1152,7 +1141,7 @@ function selectMapEntity(entity) {
 .workflow-progress {
   margin-top: 15px;
   padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--sf-brand) 24%, var(--sf-border-light));
+  border: 0;
   border-radius: var(--sf-radius-lg);
   background: color-mix(in srgb, var(--sf-bg-tertiary) 94%, var(--sf-brand));
 }
@@ -1172,12 +1161,13 @@ function selectMapEntity(entity) {
 .workflow-progress > header span,
 .workflow-task-list small {
   color: var(--sf-text-disabled);
-  font-size: 9px;
+  font-size: 11px;
 }
 .workflow-progress > header b {
   overflow: hidden;
   color: var(--sf-text-primary);
   font-size: 11px;
+  font-weight: 380;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1219,7 +1209,8 @@ function selectMapEntity(entity) {
 }
 .workflow-task-list b {
   overflow: hidden;
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 380;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1228,11 +1219,12 @@ function selectMapEntity(entity) {
   gap: 6px;
   margin-top: 10px;
   padding-top: 9px;
-  border-top: 1px solid var(--sf-border-light);
+  border-top: 0;
 }
 .subtask-progress > b {
   color: var(--sf-text-secondary);
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 380;
 }
 .subtask-progress > button {
   display: grid;
@@ -1245,7 +1237,7 @@ function selectMapEntity(entity) {
   background: transparent;
   color: var(--sf-text-secondary);
   cursor: pointer;
-  font-size: 10px;
+  font-size: 11px;
   text-align: left;
 }
 .subtask-progress > button:hover {
@@ -1254,7 +1246,7 @@ function selectMapEntity(entity) {
 .subtask-progress p {
   margin: 0;
   color: var(--sf-text-disabled);
-  font-size: 9px;
+  font-size: 11px;
 }
 .workflow-actions {
   display: flex;
@@ -1269,7 +1261,8 @@ function selectMapEntity(entity) {
   h3 {
     margin: 0 0 9px;
     color: var(--sf-text-disabled);
-    font-size: 10px;
+    font-size: 11px;
+    font-weight: 380;
     letter-spacing: 0.08em;
   }
 
@@ -1292,6 +1285,7 @@ function selectMapEntity(entity) {
 
   dt {
     color: var(--sf-text-disabled);
+    font-weight: 380;
   }
 
   dd {
@@ -1370,7 +1364,7 @@ function selectMapEntity(entity) {
 
   span {
     max-width: 230px;
-    font-size: 10px;
+    font-size: 11px;
     line-height: 1.55;
   }
 }

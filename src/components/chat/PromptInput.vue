@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <!-- Enter 发送 / Shift+Enter 换行；生成期间保留草稿，停止是独立动作。 -->
   <div
@@ -54,7 +37,9 @@ limitations under the License.
       <div v-for="(item, index) in attachments" :key="item.id" class="attachment-chip">
         <img :src="item.previewUrl" :alt="item.name" />
         <span>{{ item.name }}</span>
-        <button type="button" title="移除图片" @click="removeAttachment(index)">×</button>
+        <el-tooltip content="移除图片" effect="dark" :show-after="500" placement="top">
+          <button type="button" @click="removeAttachment(index)">×</button>
+        </el-tooltip>
       </div>
     </div>
     <div v-if="mapBinding" class="map-reference-strip" data-testid="chat-map-binding">
@@ -63,7 +48,9 @@ limitations under the License.
         <b>{{ mapSelectionLabel }}</b>
         <small>{{ mapBinding.map_id }} · generation {{ mapBinding.generation }}</small>
       </span>
-      <button type="button" title="移除地图引用" @click="clearMapSelection">×</button>
+      <el-tooltip content="移除地图引用" effect="dark" :show-after="500" placement="top">
+        <button type="button" @click="clearMapSelection">×</button>
+      </el-tooltip>
     </div>
     <div class="composer-body">
       <el-dropdown
@@ -101,15 +88,23 @@ limitations under the License.
         :session-id="conversationId"
         :disabled="readOnly || noSession"
       />
-      <el-button
+      <el-tooltip
         v-if="isConversationScope"
-        class="map-btn"
-        :icon="Location"
-        :disabled="readOnly || noSession"
-        title="引用 Semantic Map 实体"
-        text
-        @click="openMapSelection"
-      />
+        content="引用 Semantic Map 实体"
+        effect="dark"
+        :show-after="500"
+        placement="top"
+      >
+        <span class="tooltip-reference">
+          <el-button
+            class="map-btn"
+            :icon="Location"
+            :disabled="readOnly || noSession"
+            text
+            @click="openMapSelection"
+          />
+        </span>
+      </el-tooltip>
       <el-button
         class="upload-btn"
         :icon="Paperclip"
@@ -548,7 +543,7 @@ async function onStop() {
   }
 
   :deep(.el-textarea__inner) {
-    padding: 7px 4px;
+    padding: 8px 10px;
     background: transparent;
     box-shadow: none;
   }
@@ -571,7 +566,7 @@ async function onStop() {
   span {
     color: var(--sf-brand);
     font-size: 13px;
-    font-weight: 650;
+    font-weight: 520;
   }
 
   small {
@@ -597,7 +592,7 @@ async function onStop() {
   align-items: center;
   gap: 6px;
   color: var(--sf-text-secondary);
-  font-weight: 600;
+  font-weight: 380;
 }
 
 .agent-dot {
@@ -648,6 +643,10 @@ async function onStop() {
 
 .file-input {
   display: none;
+}
+
+.tooltip-reference {
+  display: inline-flex;
 }
 
 .attachment-strip {
@@ -752,7 +751,7 @@ async function onStop() {
     min-width: 0;
   }
   :deep(.el-textarea__inner) {
-    padding: 0 0 8px;
+    padding: 2px 4px 8px;
     font-size: 14px;
     line-height: 1.65;
   }

@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <button
     type="button"
@@ -32,10 +15,17 @@ limitations under the License.
           <el-tag size="small" effect="plain" type="info">{{ agent.mode }}</el-tag>
         </div>
       </div>
-      <span class="status" :title="`状态：${statusMeta.label}`">
-        <i class="status-dot" :style="{ background: statusMeta.color }" />
-        {{ statusMeta.label }}
-      </span>
+      <el-tooltip
+        :content="`状态：${statusMeta.label}`"
+        effect="dark"
+        :show-after="500"
+        placement="top"
+      >
+        <span class="status">
+          <i class="status-dot" :style="{ background: statusMeta.color }" />
+          {{ statusMeta.label }}
+        </span>
+      </el-tooltip>
     </div>
 
     <div class="card-meta">
@@ -111,7 +101,7 @@ const roleInitial = computed(() => (props.agent.role || '?').slice(0, 1).toUpper
   border-radius: var(--sf-radius-md);
   color: #fff;
   font-size: var(--sf-font-lg);
-  font-weight: 700;
+  font-weight: 630;
 }
 
 .head-text {
@@ -121,7 +111,7 @@ const roleInitial = computed(() => (props.agent.role || '?').slice(0, 1).toUpper
 
 .agent-id {
   font-size: var(--sf-font-md);
-  font-weight: 600;
+  font-weight: 520;
   color: var(--sf-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;

@@ -1,18 +1,3 @@
-// Copyright 2026 InsightOS
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 import { defineStore } from 'pinia'
 import * as devicesApi from '@/api/devices'
 import { compactFeedback, feedbackDisplayKey } from '@/robot/executionRecords'
@@ -71,10 +56,21 @@ function mergeTimelineItem(items, item, keyFor, event) {
   const index = items.findIndex((candidate) => keyFor(candidate, event) === key)
   if (index < 0) return [...items, item]
   const next = [...items]
-  next.splice(index, 1, {
+  const merged = {
     ...items[index],
     ...Object.fromEntries(Object.entries(item).filter(([, value]) => value !== undefined))
-  })
+  }
+  // stage.running 也用于周期反馈，进入时间应保留最早值；历史回放可能
+  // 晚于当前快照到达，取两者最早时间才能稳定恢复真实阶段顺序。
+  if (keyFor === itemKey.stages && items[index].started_at && item.started_at)
+    merged.started_at = [items[index].started_at, item.started_at].sort()[0]
+  // 阶段证据是增量记录。后续进度或终态事件的空引用表示本次没有新增证据，
+  // 不能清除 stage.evidence 已登记的照片，否则失败验收阶段会丢失图像入口。
+  if (keyFor === itemKey.stages)
+    merged.evidence_refs = [
+      ...new Set([...asArray(items[index].evidence_refs), ...asArray(item.evidence_refs)])
+    ]
+  next.splice(index, 1, merged)
   return next
 }
 
@@ -150,7 +146,9 @@ function timelineItem(event, kind) {
               : undefined),
       progress: payload.progress,
       expectation: payload.expectation,
-      observation: payload.observation_summary,
+      observation:
+        payload.observation_summary ||
+        (event.type === 'stage.running' ? payload.summary : undefined),
       recovery_reason: payload.deviation,
       evidence_refs: payload.evidence_refs,
       next_step: payload.next_step,
@@ -446,6 +444,12 @@ export const useRobotStore = defineStore('robotExecutions', {
         item
       ) {
         next[kind] = mergeTimelineItem(asArray(current[kind]), item, itemKey[kind], event)
+        if (kind === 'stages')
+          next.stages.sort(
+            (left, right) =>
+              (Date.parse(left.started_at || left.updated_at) || Infinity) -
+              (Date.parse(right.started_at || right.updated_at) || Infinity)
+          )
         if (kind === 'feedback') {
           const previous = asArray(current.feedback).find(
             (value) => feedbackDisplayKey(value) === feedbackDisplayKey(item)

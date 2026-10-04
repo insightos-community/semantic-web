@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <section class="trace-explorer" data-testid="trace-explorer">
     <header>
@@ -32,13 +15,27 @@ limitations under the License.
     <div v-if="!effectiveTraceId && !runId" class="empty">请选择一个 Agent Run 查看调用记录。</div>
     <template v-else>
       <div class="call-controls">
-        <input v-model="query" aria-label="搜索调用" placeholder="搜索模型、工具或错误" />
-        <select v-model="kind" aria-label="调用类型">
-          <option value="">全部调用</option>
-          <option value="model">模型</option>
-          <option value="tool">工具</option>
-          <option value="error">错误</option>
-        </select>
+        <el-input
+          v-model="query"
+          aria-label="搜索调用"
+          class="call-search"
+          clearable
+          placeholder="搜索模型、工具或错误"
+          size="small"
+        />
+        <el-select
+          v-model="kind"
+          aria-label="调用类型"
+          class="call-kind-select"
+          placeholder="全部调用"
+          size="small"
+          style="width: 128px"
+        >
+          <el-option label="全部调用" value="" />
+          <el-option label="模型" value="model" />
+          <el-option label="工具" value="tool" />
+          <el-option label="错误" value="error" />
+        </el-select>
         <span>{{ calls.length }} 条调用</span>
       </div>
       <div class="calls-layout">
@@ -315,17 +312,24 @@ header span,
   margin: 12px 0;
   font-size: 11px;
 }
-input,
-select {
-  min-width: 0;
-  padding: 7px;
-  border: 1px solid var(--sf-border-light);
-  border-radius: 5px;
-  background: var(--sf-bg-secondary);
-  color: var(--sf-text-primary);
-}
-input {
+.call-search {
   flex: 1;
+  min-width: 0;
+  :deep(.el-input__wrapper) {
+    height: 32px;
+    min-height: 32px;
+    border-radius: 5px;
+    font-size: 12px;
+  }
+}
+.call-kind-select {
+  flex: none;
+  :deep(.el-select__wrapper) {
+    height: 32px;
+    min-height: 32px;
+    border-radius: 5px;
+    font-size: 12px;
+  }
 }
 .calls-layout {
   display: grid;

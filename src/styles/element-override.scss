@@ -1,0 +1,322 @@
+/**
+ * Element Plus 样式覆盖 - 必须最后导入以覆盖默认样式
+ * 使用 @layer 反覆盖 EP 的 @layer，或通过选择器权重确保生效
+ */
+
+// 覆盖 Element Plus 的 @layer（若存在），无 layer 的样式优先级更高
+.el-button,
+button.el-button {
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  transition: all 0.3s ease-in-out !important;
+  &.el-button--primary {
+    background-color: var(--el-color-primary) !important;
+    border-color: var(--el-color-primary) !important;
+    color: #fff !important;
+    &:hover,
+    &:focus {
+      background-color: var(--el-color-primary-light-3) !important;
+      border-color: var(--el-color-primary-light-3) !important;
+      color: #fff !important;
+      border-radius: 16px;
+      background: var(--el-color-primary);
+      box-shadow:
+        39px 79px 25px 0 rgba(25, 76, 252, 0),
+        25px 51px 23px 0 rgba(25, 76, 252, 0.02),
+        14px 29px 19px 0 rgba(25, 76, 252, 0.06),
+        6px 13px 14px 0 rgba(25, 76, 252, 0.1),
+        2px 3px 8px 0 rgba(25, 76, 252, 0.12) !important;
+    }
+    &:active,
+    &.is-active {
+      background-color: var(--el-color-primary-dark-2) !important;
+      border-color: var(--el-color-primary-dark-2) !important;
+    }
+    &:disabled {
+      background-color: var(--el-color-primary-light-5) !important;
+      border-color: var(--el-color-primary-light-5) !important;
+      color: #fff !important;
+      opacity: 0.6;
+    }
+  }
+
+  &.el-button--success {
+    background-color: #17b74e1a !important;
+    border-color: #17b74e1a !important;
+    color: #17b74e !important;
+    &:hover,
+    &:focus {
+      background-color: #17b74e !important;
+      border-color: #17b74e !important;
+      color: #fff !important;
+    }
+    &:active,
+    &.is-active {
+      background-color: #1a9845 !important;
+      border-color: #1a9845 !important;
+      color: #fff !important;
+    }
+  }
+
+  &.el-button--danger {
+    background-color: var(--el-color-danger) !important;
+    border-color: var(--el-color-danger) !important;
+    &:hover,
+    &:focus {
+      background-color: var(--el-color-danger-light-3) !important;
+      border-color: var(--el-color-danger-light-3) !important;
+    }
+    &:active,
+    &.is-active {
+      background-color: var(--el-color-danger-dark-2) !important;
+      border-color: var(--el-color-danger-dark-2) !important;
+    }
+    &.is-disabled,
+    &.is-disabled:hover,
+    &.is-disabled:focus {
+      background-color: var(--sf-bg-tertiary) !important;
+      border-color: var(--sf-border-light) !important;
+      color: var(--sf-text-disabled) !important;
+      box-shadow: none !important;
+    }
+  }
+
+  &.el-button--warning {
+    background-color: var(--el-color-warning) !important;
+    border-color: var(--el-color-warning) !important;
+    &:hover,
+    &:focus {
+      background-color: var(--el-color-warning-light-3) !important;
+      border-color: var(--el-color-warning-light-3) !important;
+    }
+    &:active,
+    &.is-active {
+      background-color: var(--el-color-warning-dark-2) !important;
+      border-color: var(--el-color-warning-dark-2) !important;
+    }
+  }
+  &.el-button--default {
+    background-color: #f6f6f6 !important;
+    border-color: #fff !important;
+    color: var(--el-color-primary) !important;
+    &:hover {
+      background: #fff !important;
+      box-shadow:
+        39px 79px 25px 0 rgba(25, 76, 252, 0),
+        25px 51px 23px 0 rgba(25, 76, 252, 0.01),
+        14px 29px 19px 0 rgba(25, 76, 252, 0.02),
+        6px 13px 14px 0 rgba(25, 76, 252, 0.03),
+        2px 3px 8px 0 rgba(25, 76, 252, 0.04);
+    }
+    &:active {
+      background: #f6f8ff !important;
+    }
+  }
+  &.el-button--info {
+    background-color: rgba(24, 76, 252, 0.1) !important;
+    // border-color: rgba(24, 76, 252, 0.10) !important ;
+    color: var(--el-color-primary) !important;
+    &:hover,
+    &:focus {
+      background-color: #e5f1ff !important;
+      border-color: #e5f1ff !important;
+      color: var(--el-color-primary) !important;
+      box-shadow:
+        39px 79px 25px 0 rgba(25, 76, 252, 0),
+        25px 51px 23px 0 rgba(25, 76, 252, 0.01),
+        14px 29px 19px 0 rgba(25, 76, 252, 0.02),
+        6px 13px 14px 0 rgba(25, 76, 252, 0.03),
+        2px 3px 8px 0 rgba(25, 76, 252, 0.04) !important;
+    }
+    &:active,
+    &.is-active {
+      background-color: var(--el-color-info-dark-2) !important;
+      border-color: var(--el-color-info-dark-2) !important;
+    }
+  }
+
+  &.is-disabled {
+    background: #dfe3ef !important;
+    color: #8c97bc !important;
+    &:hover {
+      background: #dfe3ef !important;
+      color: #8c97bc !important;
+    }
+    &:active {
+      background: #dfe3ef !important;
+      color: #8c97bc !important;
+    }
+    &:focus {
+      background: #dfe3ef !important;
+      color: #8c97bc !important;
+    }
+  }
+}
+
+// =====================================================================
+// 可读性修正：兼容浅/深两套 EP 变量，保证按钮任何状态下文字都清晰
+// （上面的规则把 plain/text/link 变体也强制成了实心底色，导致彩色文字落在同色底上看不清）
+// =====================================================================
+
+// 1) plain 变体：彩色文字 + 浅色底（EP 变量 light-9），不做实心
+.el-button.is-plain:not(.is-disabled) {
+  &.el-button--primary {
+    color: var(--el-color-primary) !important;
+    background-color: var(--el-color-primary-light-9) !important;
+    border-color: var(--el-color-primary-light-5) !important;
+  }
+  &.el-button--success {
+    color: var(--el-color-success) !important;
+    background-color: var(--el-color-success-light-9) !important;
+    border-color: var(--el-color-success-light-5) !important;
+  }
+  &.el-button--danger {
+    color: var(--el-color-danger) !important;
+    background-color: var(--el-color-danger-light-9) !important;
+    border-color: var(--el-color-danger-light-5) !important;
+  }
+  &.el-button--warning {
+    color: var(--el-color-warning) !important;
+    background-color: var(--el-color-warning-light-9) !important;
+    border-color: var(--el-color-warning-light-5) !important;
+  }
+  &.el-button--info {
+    color: var(--el-color-info) !important;
+    background-color: var(--el-color-info-light-9) !important;
+    border-color: var(--el-color-info-light-5) !important;
+  }
+}
+
+// 2) text / link 变体：透明底 + 彩色文字
+.el-button.is-text:not(.is-disabled),
+.el-button.is-link:not(.is-disabled) {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  &.el-button--primary {
+    color: var(--el-color-primary) !important;
+  }
+  &.el-button--success {
+    color: var(--el-color-success) !important;
+  }
+  &.el-button--danger {
+    color: var(--el-color-danger) !important;
+  }
+  &.el-button--warning {
+    color: var(--el-color-warning) !important;
+  }
+  &.el-button--info {
+    color: var(--el-color-info) !important;
+  }
+}
+
+// 2.5) danger text / link 变体：改为浅底边框按钮（如"移除期望"），hover 仍可见
+.el-button.is-text.el-button--danger:not(.is-disabled),
+.el-button.is-link.el-button--danger:not(.is-disabled) {
+  background-color: #fff0f0 !important;
+  border: 1px solid #f8caca !important;
+  color: #fc1818 !important;
+  &:hover,
+  &:focus {
+    background-color: #ffe0e0 !important;
+    border-color: #f8a8a8 !important;
+    color: #d10f0f !important;
+  }
+  &:active {
+    background-color: #ffd1d1 !important;
+    border-color: #f58a8a !important;
+    color: #b00d0d !important;
+  }
+}
+
+// 2.6) 禁用按钮：全局冻结 hover/focus/active 样式变化
+.el-button.is-disabled,
+.el-button.is-disabled:hover,
+.el-button.is-disabled:focus,
+.el-button.is-disabled:active {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  transform: none !important;
+}
+
+// 3) 实心 danger / warning：文字恒白（深色主题下 --el-color-white 被映射为深色，不能依赖它）
+.el-button--danger:not(.is-plain):not(.is-text):not(.is-link):not(.is-disabled),
+.el-button--warning:not(.is-plain):not(.is-text):not(.is-link):not(.is-disabled) {
+  color: #fff !important;
+}
+
+// 4) 实心 primary / danger / warning 的 hover、active 向深色压，避免在深色主题下浅色底配白字
+.el-button--primary:not(.is-plain):not(.is-text):not(.is-link):not(.is-disabled) {
+  &:hover,
+  &:focus {
+    background-color: color-mix(in srgb, var(--el-color-primary) 82%, #000) !important;
+    border-color: color-mix(in srgb, var(--el-color-primary) 82%, #000) !important;
+  }
+  &:active,
+  &.is-active {
+    background-color: color-mix(in srgb, var(--el-color-primary) 70%, #000) !important;
+    border-color: color-mix(in srgb, var(--el-color-primary) 70%, #000) !important;
+  }
+}
+.el-button--danger:not(.is-plain):not(.is-text):not(.is-link):not(.is-disabled) {
+  &:hover,
+  &:focus {
+    background-color: color-mix(in srgb, var(--el-color-danger) 82%, #000) !important;
+    border-color: color-mix(in srgb, var(--el-color-danger) 82%, #000) !important;
+  }
+  &:active,
+  &.is-active {
+    background-color: color-mix(in srgb, var(--el-color-danger) 70%, #000) !important;
+    border-color: color-mix(in srgb, var(--el-color-danger) 70%, #000) !important;
+  }
+}
+.el-button--warning:not(.is-plain):not(.is-text):not(.is-link):not(.is-disabled) {
+  &:hover,
+  &:focus {
+    background-color: color-mix(in srgb, var(--el-color-warning) 82%, #000) !important;
+    border-color: color-mix(in srgb, var(--el-color-warning) 82%, #000) !important;
+  }
+  &:active,
+  &.is-active {
+    background-color: color-mix(in srgb, var(--el-color-warning) 70%, #000) !important;
+    border-color: color-mix(in srgb, var(--el-color-warning) 70%, #000) !important;
+  }
+}
+
+// 5) 浅色下 success 常显的“浅绿底+绿字”对比略弱，加深文字保证可读（深色下保持原色即可）
+html:not(.dark)
+  .el-button--success:not(.is-plain):not(.is-text):not(.is-link):not(.is-disabled):not(:hover):not(
+    :focus
+  ):not(:active) {
+  color: #0d8f44 !important;
+}
+// 6) 深色下 info 常显的“透明蓝底+深蓝字”看不清，改亮字+可见底色
+html.dark
+  .el-button--info:not(.is-plain):not(.is-text):not(.is-link):not(.is-disabled):not(:hover):not(
+    :focus
+  ):not(:active) {
+  color: #9db8ff !important;
+  background-color: rgba(24, 76, 252, 0.22) !important;
+}
+
+// 空白按钮
+.el-button--blank {
+  border-radius: 24px;
+  cursor: pointer;
+  padding: 6px 10px;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: var(--el-color-primary) !important;
+  &:hover {
+    background: #fff !important;
+    color: var(--el-color-primary) !important;
+  }
+  &:active {
+    background: #f7f7f8 !important;
+  }
+}
+.tooltip-shadow {
+  border-radius: 12px;
+  background: rgba(37, 41, 65, 0.9);
+  box-shadow: 18px 18px 27px 0 rgba(24, 76, 252, 0.18);
+}

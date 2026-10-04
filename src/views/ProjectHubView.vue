@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <div class="project-hub">
     <header class="hub-header">
@@ -62,8 +45,34 @@ limitations under the License.
             <h2>{{ item.name }}</h2>
             <code>{{ item.id }}</code>
           </div>
-          <el-tag v-if="item.is_active" size="small" type="success">活动 Project</el-tag>
-          <el-tag v-else-if="item.archived" size="small" type="info">已归档</el-tag>
+          <div class="card-head-actions">
+            <el-tag v-if="item.is_active" size="small" type="success">活动 Project</el-tag>
+            <el-tag v-else-if="item.archived" size="small" type="info">已归档</el-tag>
+            <el-tooltip content="重命名" effect="dark" :show-after="500" placement="top">
+              <button
+                v-if="!item.archived"
+                type="button"
+                class="ghost-icon-btn"
+                @click.stop="rename(item)"
+              >
+                <Edit />
+              </button>
+            </el-tooltip>
+            <el-tooltip content="归档" effect="dark" :show-after="500" placement="top">
+              <button
+                v-if="!item.archived && !item.is_default"
+                type="button"
+                class="ghost-icon-btn"
+                :aria-label="`归档 ${item.name || 'Project'}`"
+                @click.stop="archive(item)"
+              >
+                <TakeawayBox />
+              </button>
+            </el-tooltip>
+            <span v-if="!item.archived && item.is_default" class="protected-project">
+              系统保留，不能归档
+            </span>
+          </div>
         </div>
         <dl>
           <div>
@@ -80,18 +89,10 @@ limitations under the License.
           </div>
         </dl>
         <footer v-if="!item.archived">
-          <el-button size="small" @click.stop="rename(item)">重命名</el-button>
-          <el-button
-            v-if="!item.is_default"
-            size="small"
-            type="danger"
-            text
-            @click.stop="archive(item)"
-          >
-            归档
-          </el-button>
-          <span v-else class="protected-project">系统保留，不能归档</span>
-          <el-button size="small" type="primary" @click.stop="open(item)">打开 Studio</el-button>
+          <button type="button" class="open-studio-btn" @click.stop="open(item)">
+            <el-icon class="open-icon"><Promotion /></el-icon>
+            <span>打开 Studio</span>
+          </button>
         </footer>
         <footer v-else class="archive-note">
           数据已保留；当前版本暂不支持恢复或打开已归档 Project。
@@ -163,7 +164,7 @@ limitations under the License.
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Edit, TakeawayBox, Promotion } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 import { useProjectStore } from '@/stores/project'
 import * as simulationApi from '@/api/simulation'
@@ -182,6 +183,7 @@ const createForm = reactive({
   runtimeProfileId: '',
   preferredInstallationId: ''
 })
+
 const runtimeProfiles = computed(() => {
   const profiles = new Map()
   for (const installation of runtimeInstallations.value) {
@@ -334,8 +336,8 @@ onMounted(async () => {
 
 .eyebrow {
   color: var(--sf-brand);
-  font-size: 10px;
-  font-weight: 750;
+  font-size: 11px;
+  font-weight: 380;
   letter-spacing: 0.12em;
 }
 
@@ -369,10 +371,10 @@ onMounted(async () => {
     span {
       min-width: 19px;
       padding: 1px 5px;
-      border-radius: 9px;
+      border-radius: 8px;
       background: var(--sf-bg-tertiary);
       color: var(--sf-text-disabled);
-      font-size: 10px;
+      font-size: 11px;
     }
 
     &:hover,
@@ -386,24 +388,25 @@ onMounted(async () => {
 .project-grid {
   display: grid;
   max-width: 1320px;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   gap: 16px;
   margin: 0 auto;
 }
-
 .project-card,
 .new-project-card {
   min-height: 215px;
   padding: 20px;
-  border: 1px solid var(--sf-border-light);
-  border-radius: 13px;
+  border: 0;
+  border-radius: 12px;
   background: var(--sf-bg-secondary);
-  box-shadow: var(--sf-shadow-sm);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 4px 16px rgba(15, 23, 42, 0.06);
 }
 
 .project-card {
   &.active {
-    border-color: color-mix(in srgb, var(--sf-success) 38%, var(--sf-border));
+    border-color: transparent;
   }
 
   &.archived {
@@ -412,21 +415,22 @@ onMounted(async () => {
 
   dl {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
     margin: 24px 0 20px;
   }
 
   dl div {
-    padding: 9px;
-    border-radius: 7px;
+    min-width: 0;
+    padding: 10px;
+    border-radius: 8px;
     background: var(--sf-bg-tertiary);
   }
 
   dt,
   dd {
     margin: 0;
-    font-size: 10px;
+    font-size: 11px;
   }
 
   dt {
@@ -440,15 +444,83 @@ onMounted(async () => {
 
   footer {
     display: flex;
-    justify-content: flex-end;
-    gap: 5px;
+    margin-top: auto;
+  }
+}
+
+.card-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.ghost-icon-btn {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--sf-text-disabled);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  svg {
+    width: 14px;
+  }
+
+  &:hover {
+    background: var(--sf-bg-hover);
+    color: var(--sf-text-primary);
+  }
+
+  &.danger:hover {
+    background: color-mix(in srgb, var(--sf-danger) 10%, transparent);
+    color: var(--sf-danger);
+  }
+}
+
+.open-studio-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--sf-brand) 0%, var(--sf-brand-active) 100%);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 520;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+
+  .open-icon {
+    font-size: 15px;
+  }
+
+  span {
+    white-space: nowrap;
+  }
+
+  &:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--sf-brand) 32%, transparent);
   }
 }
 
 .protected-project,
 .archive-note {
   color: var(--sf-text-disabled);
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .archive-note {
@@ -477,7 +549,7 @@ onMounted(async () => {
 
   code {
     color: var(--sf-text-disabled);
-    font-size: 9px;
+    font-size: 11px;
   }
 }
 
@@ -486,10 +558,10 @@ onMounted(async () => {
   width: 38px;
   height: 38px;
   flex: none;
-  border-radius: 9px;
-  background: linear-gradient(145deg, var(--sf-brand), #6c82eb);
+  border-radius: 8px;
+  background: linear-gradient(135deg, #0253fd 0%, #0231ae 50%, #021976 100%);
   color: white;
-  font-weight: 750;
+  font-weight: 380;
   place-items: center;
 }
 
@@ -527,7 +599,7 @@ onMounted(async () => {
   flex-direction: column;
   gap: 7px;
   border: 1px dashed var(--sf-border-light);
-  border-radius: 13px;
+  border-radius: 12px;
   color: var(--sf-text-secondary);
 
   small {

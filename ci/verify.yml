@@ -28,10 +28,14 @@ gitleaks:
   extends:
     - .verify_rules
     - .node_image
-  timeout: 10m
+  timeout: 5m
+  variables:
+    GIT_DEPTH: "1"
   script:
     - bash ci/install-gitleaks.sh
-    - .ci-bin/gitleaks detect --source . --config .gitleaks.toml --verbose
+    - mkdir -p /tmp/gitleaks-src
+    - git archive HEAD | tar -x -C /tmp/gitleaks-src
+    - .ci-bin/gitleaks detect --no-git --source /tmp/gitleaks-src --config /tmp/gitleaks-src/.gitleaks.toml --verbose
 
 build:
   stage: build

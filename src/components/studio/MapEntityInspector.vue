@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <div class="map-entity-inspector">
     <section class="inspector-section">
@@ -29,7 +12,9 @@ limitations under the License.
         <div class="entity-meta">
           <div class="meta-item meta-id">
             <span>Entity ID</span>
-            <strong :title="entity.id">{{ entity.id }}</strong>
+            <el-tooltip :content="entity.id" effect="dark" :show-after="500" placement="top">
+              <strong>{{ entity.id }}</strong>
+            </el-tooltip>
           </div>
           <div class="meta-item">
             <span>地图版本</span>
@@ -535,7 +520,7 @@ onMounted(() => {
   margin: 0;
   color: var(--sf-text-primary);
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 380;
 }
 .inspector-section header span,
 .danger-section span,
@@ -543,7 +528,7 @@ onMounted(() => {
 .evidence-empty,
 .missing-evidence span {
   color: var(--sf-text-disabled);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.5;
 }
 .entity-meta {
@@ -570,14 +555,14 @@ onMounted(() => {
 }
 .meta-item span {
   color: var(--sf-text-disabled);
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.2;
 }
 .meta-item strong {
   overflow: hidden;
   color: var(--sf-text-secondary);
-  font-size: 9px;
-  font-weight: 550;
+  font-size: 11px;
+  font-weight: 380;
   line-height: 1.35;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -588,7 +573,7 @@ onMounted(() => {
 .form-group {
   padding: 10px;
   border: 1px solid var(--sf-border-light);
-  border-radius: 9px;
+  border-radius: 8px;
   background: color-mix(in srgb, var(--sf-bg-secondary) 52%, transparent);
 }
 .form-group + .form-group {
@@ -604,13 +589,13 @@ onMounted(() => {
 .form-group-title b {
   flex: 0 0 auto;
   color: var(--sf-text-primary);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 380;
 }
 .form-group-title span {
   overflow: hidden;
   color: var(--sf-text-disabled);
-  font-size: 8px;
+  font-size: 10px;
   line-height: 1.3;
   text-align: right;
   text-overflow: ellipsis;
@@ -626,8 +611,8 @@ onMounted(() => {
   margin-bottom: 4px;
   padding: 0;
   color: var(--sf-text-secondary);
-  font-size: 9px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 380;
   line-height: 1.35;
 }
 .entity-editor :deep(.el-input__wrapper),
@@ -638,7 +623,7 @@ onMounted(() => {
 .entity-editor :deep(.el-input__inner),
 .entity-editor :deep(.el-select__selected-item),
 .entity-editor :deep(.el-input-number .el-input__inner) {
-  font-size: 10px;
+  font-size: 11px;
 }
 .entity-editor :deep(.el-input.is-disabled .el-input__wrapper),
 .entity-editor :deep(.el-select .el-select__wrapper.is-disabled),
@@ -673,8 +658,8 @@ onMounted(() => {
 }
 .axis-field > span {
   color: var(--sf-text-disabled);
-  font-size: 8px;
-  font-weight: 650;
+  font-size: 10px;
+  font-weight: 380;
   line-height: 1;
   text-align: center;
 }
@@ -696,7 +681,7 @@ onMounted(() => {
   gap: 7px;
   margin-top: 4px;
   color: var(--sf-text-disabled);
-  font-size: 8px;
+  font-size: 10px;
 }
 .quaternion-status.invalid {
   color: var(--sf-warning);
@@ -704,13 +689,13 @@ onMounted(() => {
 .quaternion-status :deep(.el-button) {
   height: 22px;
   padding: 0 5px;
-  font-size: 8px;
+  font-size: 10px;
 }
 .readonly-value {
   display: block;
   margin-bottom: 8px;
   color: var(--sf-text-secondary);
-  font-size: 10px;
+  font-size: 11px;
 }
 .edit-actions {
   display: flex;
@@ -725,12 +710,12 @@ onMounted(() => {
   gap: 8px;
   padding: 7px 2px 0;
   color: var(--sf-text-disabled);
-  font-size: 8px;
+  font-size: 10px;
 }
 .source-note strong {
   color: var(--sf-text-secondary);
-  font-size: 9px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 380;
 }
 .relation-link {
   display: flex;
@@ -741,11 +726,11 @@ onMounted(() => {
   margin-top: 8px;
   padding: 8px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--sf-bg-tertiary);
   color: var(--sf-text-secondary);
   cursor: pointer;
-  font-size: 10px;
+  font-size: 11px;
   text-align: left;
 }
 .relation-link:hover {
@@ -772,7 +757,7 @@ onMounted(() => {
   border-radius: 999px;
   background: var(--sf-brand-soft);
   color: var(--sf-brand);
-  font-size: 8px;
+  font-size: 10px;
 }
 .evidence-item :deep(.artifact-resource-card) {
   grid-template-columns: 36px minmax(0, 1fr) auto;
@@ -790,12 +775,12 @@ onMounted(() => {
   gap: 3px;
   padding: 8px;
   border: 1px dashed var(--sf-border-light);
-  border-radius: 7px;
+  border-radius: 6px;
 }
 .missing-evidence b {
   overflow: hidden;
   color: var(--sf-text-secondary);
-  font-size: 9px;
+  font-size: 11px;
   text-overflow: ellipsis;
 }
 .danger-section {

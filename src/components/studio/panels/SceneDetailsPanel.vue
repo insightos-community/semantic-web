@@ -1,36 +1,34 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <section class="scene-details-panel">
     <header>
       <div>
         <span>{{ scene?.engine || 'simulation' }} / {{ scene?.loader || 'unknown' }}</span>
         <h2>{{ scene?.name || reference?.catalog_scene_id || '场景详情' }}</h2>
-        <p>{{ scene?.description }}</p>
       </div>
       <div class="scene-visual">
-        <img v-if="scene?.preview" :src="scene.preview" :alt="scene.name" />
+        <button
+          v-if="scene?.preview"
+          class="scene-preview-button"
+          type="button"
+          aria-label="预览场景"
+          @click="
+            showPreview({
+              name: scene.name,
+              preview: scene.preview,
+              description: scene.description
+            })
+          "
+        >
+          <ScenePreviewImage :src="scene.preview" :alt="scene.name" :zoom-enabled="false" />
+          <span>预览场景</span>
+        </button>
         <el-tag> 场景模板 </el-tag>
       </div>
     </header>
 
     <details v-if="reference && scene" class="scene-metadata">
       <summary>场景信息</summary>
+      <p class="preview-description">{{ scene.description }}</p>
       <el-descriptions :column="2" border>
         <el-descriptions-item label="Project 版本">
           {{ reference.scene_version }}
@@ -98,23 +96,81 @@ limitations under the License.
 
     <section class="variants">
       <h3>布局与初始状态</h3>
+      <div class="preview-actions">
+        <el-button :loading="previewBusy" @click="preparePreviews">更新任务信息与预览</el-button>
+        <el-button v-if="previewBusy" @click="cancelPreviews">取消预览生成</el-button>
+        <small role="status">{{
+          previewMessage ||
+          scene?.preview_preparation?.message ||
+          '点击预览查看大图和详情；选择初态不会改变当前现场。'
+        }}</small>
+      </div>
       <div class="variant-grid">
-        <button
+        <article
           v-for="variant in version?.variants || []"
           :key="variant.variant_id"
-          type="button"
+          class="variant-card"
           :class="{ selected: variantId === variant.variant_id }"
-          @click="variantId = variant.variant_id"
         >
-          <img v-if="variant.preview" :src="variant.preview" :alt="variant.name" />
-          <span class="variant-copy">
+          <button
+            v-if="variant.preview"
+            class="variant-image"
+            type="button"
+            :aria-label="`预览 ${variant.name}`"
+            @click="showPreview(variant)"
+          >
+            <ScenePreviewImage :src="variant.preview" :alt="variant.name" :zoom-enabled="false" />
+            <span>预览</span>
+          </button>
+          <div v-else class="variant-image preview-placeholder">暂无预览</div>
+          <button
+            class="variant-copy"
+            type="button"
+            :aria-pressed="variantId === variant.variant_id"
+            @click="variantId = variant.variant_id"
+          >
             <b>{{ variant.name }}</b>
-            <span>{{ variant.kind }}</span>
-            <small>{{ variant.description || variant.variant_id }}</small>
-          </span>
-        </button>
+            <small>{{
+              variant.variant_id === 'init-0'
+                ? '默认初态'
+                : variant.kind === 'init_state'
+                  ? '初始布局'
+                  : '场景布局'
+            }}</small>
+            <span class="selection-label">{{
+              variantId === variant.variant_id ? '已选择' : '选择'
+            }}</span>
+          </button>
+        </article>
       </div>
     </section>
+
+    <el-dialog
+      v-model="previewOpen"
+      :title="previewDetails?.name || '场景预览'"
+      append-to-body
+      width="min(760px, 92vw)"
+      @closed="previewDetails = null"
+    >
+      <template v-if="previewDetails">
+        <div class="detail-preview">
+          <ScenePreviewImage
+            :src="previewDetails.preview"
+            :alt="previewDetails.name"
+            :zoom-enabled="false"
+          />
+        </div>
+        <h4>任务</h4>
+        <p>{{ scene?.name }}</p>
+        <h4>详细信息</h4>
+        <p class="preview-description">
+          {{ previewDetails.description || '上游未提供更多说明。' }}
+        </p>
+        <el-button v-if="previewDetails.variant_id" type="primary" @click="selectPreview"
+          >选择此初态</el-button
+        >
+      </template>
+    </el-dialog>
 
     <details class="layout-options">
       <summary>Layout 设置</summary>
@@ -142,7 +198,7 @@ limitations under the License.
       <el-button
         v-if="!isActiveTarget"
         type="primary"
-        :disabled="!reference || !variantId || !runtimeSelectionReady"
+        :disabled="!reference || !variantId || !runtimeSelectionReady || store.sceneTransitioning"
         :loading="starting"
         @click="start"
       >
@@ -157,7 +213,9 @@ limitations under the License.
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
+import request from '@/api/request'
+import ScenePreviewImage from '@/components/simulation/ScenePreviewImage.vue'
 import { ElMessageBox } from 'element-plus'
 import { useSimulationStore } from '@/stores/simulation'
 import { useLayoutStore } from '@/stores/layout'
@@ -173,6 +231,58 @@ const runtimeInstallationId = ref('')
 const seed = ref(0)
 const starting = ref(false)
 const creatingLayout = ref(false)
+const previewBusy = ref(false)
+const previewMessage = ref('')
+const previewDetails = ref(null)
+const previewOpen = ref(false)
+function showPreview(details) {
+  previewDetails.value = details
+  previewOpen.value = true
+}
+function selectPreview() {
+  variantId.value = previewDetails.value.variant_id
+  previewOpen.value = false
+}
+let previewTimer
+let disposed = false
+onBeforeUnmount(() => {
+  disposed = true
+  clearTimeout(previewTimer)
+})
+async function preparePreviews() {
+  if (!scene.value) return
+  previewBusy.value = true
+  previewMessage.value = '已提交预览准备，当前现场保持运行'
+  try {
+    await request.post(
+      `/projects/${store.projectId}/scene-previews/${encodeURIComponent(scene.value.scene_id)}`
+    )
+    if (!disposed) previewTimer = setTimeout(pollPreviews, 1500)
+  } catch (error) {
+    previewMessage.value = error.message
+    previewBusy.value = false
+  }
+}
+async function pollPreviews() {
+  try {
+    await store.refreshSceneResources()
+    const status = scene.value?.preview_preparation
+    if (status) previewMessage.value = status.message
+    if (status && ['ready', 'failed', 'cancelled', 'unavailable'].includes(status.state)) {
+      previewBusy.value = false
+      return
+    }
+    if (!disposed) previewTimer = setTimeout(pollPreviews, 1500)
+  } catch (error) {
+    previewMessage.value = error.message
+    previewBusy.value = false
+  }
+}
+async function cancelPreviews() {
+  await request.post(
+    `/projects/${store.projectId}/scene-previews/${encodeURIComponent(scene.value.scene_id)}/cancel`
+  )
+}
 const reference = computed(() =>
   store.projectScenes.find((item) => item.project_scene_id === props.panelParams.resourceId)
 )
@@ -218,6 +328,7 @@ const runtimeSelectionReady = computed(() => {
   )
 })
 const startActionLabel = computed(() => {
+  if (store.sceneTransitioning) return '场景正在加载或切换…'
   if (store.runtimeInterrupted) return '清理中断场景并启动'
   if (store.instance?.state === 'failed') return '清理失败场景并启动'
   return sameScene.value
@@ -227,8 +338,10 @@ const startActionLabel = computed(() => {
       : '启动此 Layout'
 })
 watch(
-  reference,
-  (value) => {
+  () => reference.value?.project_scene_id,
+  () => {
+    // 预览刷新只替换目录数据，不能把用户选中的初态重置为默认初态。
+    const value = reference.value
     variantId.value =
       (sameScene.value ? store.instance?.layout : '') ||
       value?.default_variant_id ||
@@ -249,6 +362,7 @@ watch(
 )
 
 async function start() {
+  if (starting.value || store.sceneTransitioning) return
   starting.value = true
   try {
     if (store.runtimeInterrupted) {
@@ -412,16 +526,32 @@ function openEvaluation() {
   gap: 10px;
   flex-direction: column;
 }
-.scene-visual img {
+.scene-preview-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--sf-brand);
+  cursor: pointer;
+}
+.scene-preview-button :deep(img) {
+  display: block;
   width: 220px;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1;
   border: 1px solid var(--sf-border-light);
-  border-radius: 10px;
-  object-fit: cover;
+  border-radius: 8px;
+  object-fit: contain;
 }
 header span,
 header p {
   color: var(--sf-text-secondary);
+  white-space: pre-line;
+}
+.preview-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
 }
 header h2 {
   margin: 4px 0;
@@ -456,19 +586,17 @@ header p {
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 10px;
 }
-.variant-grid button {
+.variant-card {
   display: grid;
   padding: 0;
   border: 1px solid var(--sf-border-light);
-  border-radius: 9px;
+  border-radius: 8px;
   background: var(--sf-bg-tertiary);
   color: var(--sf-text-primary);
   text-align: left;
-  cursor: pointer;
   overflow: hidden;
-  grid-template-rows: auto 1fr;
 }
-.variant-grid button.selected {
+.variant-card.selected {
   border-color: var(--sf-brand);
   background: var(--sf-brand-soft);
 }
@@ -476,17 +604,76 @@ header p {
 .variant-grid small {
   color: var(--sf-text-secondary);
 }
-.variant-grid button > img {
+.variant-image {
+  position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 1;
+  display: block;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  background: var(--sf-bg-tertiary);
+}
+.variant-image :deep(img) {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  display: block;
   border-bottom: 1px solid var(--sf-border-light);
-  object-fit: cover;
+  object-fit: contain;
+}
+.variant-image > span {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 3px 9px;
+  border-radius: 4px;
+  background: var(--sf-bg-secondary);
+  color: var(--sf-brand);
+  font-size: 12px;
+}
+.preview-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--sf-text-secondary);
+  cursor: default;
 }
 .variant-copy {
+  position: relative;
   display: flex;
   gap: 2px;
   padding: 12px;
   flex-direction: column;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.variant-copy .selection-label {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  font-size: 12px;
+  color: var(--sf-brand);
+}
+.detail-preview {
+  display: block;
+  width: min(100%, 540px);
+  aspect-ratio: 1;
+  object-fit: contain;
+  margin: auto;
+}
+.detail-preview :deep(img) {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+.preview-description {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  line-height: 1.7;
 }
 .scene-details-panel > footer {
   display: flex;

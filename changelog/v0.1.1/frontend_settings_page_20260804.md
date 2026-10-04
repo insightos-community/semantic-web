@@ -72,9 +72,9 @@ R1-R2 已交付后端设置能力（.env/校验/热重载白名单/settings REST
   `npm run dev`，全程经 vite 代理 :3000，admin/admin123 登录取 token）：
   - GET /settings 200：三个 provider（deepseek-chat/deepseek-reasoner/mock）齐全，
     default=mock（env 覆盖生效），base_hash 返回；
-  - PUT /settings/keys/deepseek-chat `{key_value:"EXAMPLE_API_KEY"}` → `{ok:true}`
+  - PUT /settings/keys/deepseek-chat `{key_value:"sk-test12345678"}` → `{ok:true}`
     （server 日志"托管密钥已写入"）；
-  - GET /settings/keys → `key_value:"EXAMPLE_API_KEY"`（掩码符合预期），响应全文 grep
+  - GET /settings/keys → `key_value:"sk-tes***"`（掩码符合预期），响应全文 grep
     明文 0 命中（页面无原文的数据源保证）；
   - PATCH `{llm:{default:"deepseek-chat"}}` → 200 `changed:["llm.default"]`，
     server 日志"配置 PATCH 已生效"+"LLM 注册表已热更新 default=deepseek-chat"；

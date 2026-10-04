@@ -1,18 +1,3 @@
-// Copyright 2026 InsightOS
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 // Trace 视图 span 组树与聚合（纯函数，供组件与单测复用，R19）。
 // 契约（以代码为准）：GET /traces/{id}/spans 按开始时间升序（同刻按写入序）
 // 返回全部跨度；parent_id 指向父跨度的自增 id（字符串），根跨度为空串

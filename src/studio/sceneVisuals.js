@@ -1,18 +1,3 @@
-// Copyright 2026 InsightOS
-// SPDX-License-Identifier: Apache-2.0
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     https://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 import request from '@/api/request'
 
 const scenePromises = new Map()
@@ -80,6 +65,19 @@ export function createSemanticCoordinateRoot(THREE) {
   return root
 }
 
+// 可选的动态相机节点沿用现有位姿流。旧 Runtime 没有 render_node_id 时，
+// 相机仍放在独立的世界坐标根节点下，保持 MuJoCo 固定相机行为。
+export function attachViewerCamera(THREE, camera, descriptor, dynamicNodes, scene) {
+  const parent = descriptor.render_node_id
+    ? dynamicNodes.get(descriptor.render_node_id)
+    : createSemanticCoordinateRoot(THREE)
+  if (!parent) throw new Error(`Viewer 缺少相机位姿节点 ${descriptor.render_node_id}`)
+  camera.position.fromArray(descriptor.position)
+  camera.quaternion.fromArray(descriptor.quaternion_xyzw)
+  parent.add(camera)
+  if (!descriptor.render_node_id) scene.add(parent)
+}
+
 // 有尺寸的地图实体以几何中心定位；GLB body 可能以底面定位。
 // 在 anchor 局部坐标中求中心，保留旋转和 Robot（无 bounds.size）的基座原点。
 export function mapSourceReferenceMatrix(THREE, sourceNodes, entity) {
@@ -110,4 +108,29 @@ export function mapSourceReferenceMatrix(THREE, sourceNodes, entity) {
 
 export function clearSceneVisualCache() {
   scenePromises.clear()
+}
+
+// 场景可在坐标根上提供初始工作视角。仅在首次取景/恢复视角时使用，
+// 不绑定机器人相机，也不覆盖用户后续旋转平移；旧场景仍按包围盒取景。
+export function applyInitialSceneView(THREE, root, camera, controls) {
+  const anchor = root?.getObjectByName('semantic-z-up-root')
+  const view = anchor?.userData?.initial_view
+  if (!view || !camera.isPerspectiveCamera) return false
+  if (
+    ![view.position, view.target].every(
+      (v) => Array.isArray(v) && v.length === 3 && v.every(Number.isFinite)
+    )
+  )
+    return false
+  anchor.updateWorldMatrix(true, false)
+  camera.position.fromArray(view.position).applyMatrix4(anchor.matrixWorld)
+  controls.target.fromArray(view.target).applyMatrix4(anchor.matrixWorld)
+  camera.up.set(0, 1, 0)
+  // 室内工作视角可声明视场角，避免把机器人裁到边缘；旧 GLB 保留原值。
+  if (Number.isFinite(view.fovy) && view.fovy > 0 && view.fovy < 180) camera.fov = view.fovy
+  camera.near = 0.01
+  camera.far = 1000
+  camera.updateProjectionMatrix()
+  controls.update()
+  return true
 }

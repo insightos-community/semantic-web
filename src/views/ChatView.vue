@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <div class="chat-view">
     <header class="workbench-toolbar">
@@ -29,16 +12,22 @@ limitations under the License.
       </div>
       <div class="layout-switch" aria-label="工作台布局">
         <span>布局</span>
-        <button
+        <el-tooltip
           v-for="item in layoutOptions"
           :key="item.id"
-          type="button"
-          :class="{ active: layoutMode === item.id }"
-          :title="item.description"
-          @click="setLayout(item.id)"
+          :content="item.description"
+          effect="dark"
+          :show-after="500"
+          placement="bottom"
         >
-          {{ item.label }}
-        </button>
+          <button
+            type="button"
+            :class="{ active: layoutMode === item.id }"
+            @click="setLayout(item.id)"
+          >
+            {{ item.label }}
+          </button>
+        </el-tooltip>
       </div>
     </header>
 
@@ -54,16 +43,11 @@ limitations under the License.
       <SideList v-if="layoutMode !== 'focus'" :width="`${sessionPaneWidth}px`">
         <template #title>会话</template>
         <template #actions>
-          <el-button
-            size="small"
-            text
-            :icon="Plus"
-            :loading="creating"
-            title="新建对话"
-            @click="onCreateSession"
-          >
-            新建
-          </el-button>
+          <el-tooltip content="新建对话" effect="dark" :show-after="500" placement="top">
+            <el-button size="small" text :icon="Plus" :loading="creating" @click="onCreateSession">
+              新建
+            </el-button>
+          </el-tooltip>
         </template>
         <EmptyState v-if="chat.sessions.length === 0" description="暂无会话，点击右上角新建" />
         <ul v-else class="session-list">
@@ -75,13 +59,15 @@ limitations under the License.
           >
             <span class="session-title">{{ s.title || s.id }}</span>
             <span class="session-time">{{ formatTime(s.updated_at) }}</span>
-            <el-button
-              class="session-delete"
-              text
-              :icon="Delete"
-              title="归档会话"
-              @click.stop="onDeleteSession(s)"
-            />
+            <el-tooltip content="归档会话" effect="dark" :show-after="500" placement="top">
+              <el-button
+                class="session-delete"
+                text
+                :icon="Delete"
+                aria-label="归档会话"
+                @click.stop="onDeleteSession(s)"
+              />
+            </el-tooltip>
           </li>
         </ul>
       </SideList>
@@ -344,11 +330,11 @@ const statusText = computed(() => {
   b {
     color: var(--sf-text-primary);
     font-size: 12px;
-    font-weight: 650;
+    font-weight: 380;
   }
   span {
     color: var(--sf-text-disabled);
-    font-size: 10px;
+    font-size: 11px;
   }
   > i {
     width: 1px;
@@ -366,7 +352,7 @@ const statusText = computed(() => {
   border-radius: 8px;
   background: var(--sf-brand);
   color: #fff !important;
-  font-weight: 750;
+  font-weight: 380;
 }
 
 .context-agent {
@@ -389,7 +375,7 @@ const statusText = computed(() => {
   > span {
     padding: 0 6px;
     color: var(--sf-text-disabled);
-    font-size: 10px;
+    font-size: 11px;
   }
   button {
     padding: 4px 8px;
@@ -397,7 +383,7 @@ const statusText = computed(() => {
     border-radius: 6px;
     background: transparent;
     color: var(--sf-text-secondary);
-    font-size: 10px;
+    font-size: 11px;
     cursor: pointer;
     &.active {
       background: var(--sf-bg-secondary);
@@ -482,7 +468,7 @@ const statusText = computed(() => {
     overflow: hidden;
     color: var(--sf-text-primary);
     font-size: var(--sf-font-md);
-    font-weight: 650;
+    font-weight: 630;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -490,8 +476,8 @@ const statusText = computed(() => {
 
 .conversation-kicker {
   color: var(--sf-brand);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 380;
   letter-spacing: 0.12em;
 }
 
@@ -523,7 +509,7 @@ const statusText = computed(() => {
     gap: var(--sf-space-2);
     padding: var(--sf-space-2) var(--sf-space-3);
     border: 1px solid transparent;
-    border-radius: 9px;
+    border-radius: 8px;
     color: var(--sf-text-secondary);
     cursor: pointer;
 

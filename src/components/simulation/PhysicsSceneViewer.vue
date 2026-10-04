@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <section ref="viewerRoot" class="physics-scene-viewer">
     <header class="viewer-toolbar">
@@ -125,7 +108,8 @@ import { useUiStore } from '@/stores/ui'
 import { useSpatialSelectionStore } from '@/stores/spatialSelection'
 import { createSimulationFrameStream } from '@/utils/simulationFrame'
 import {
-  createSemanticCoordinateRoot,
+  applyInitialSceneView,
+  attachViewerCamera,
   indexViewerScene,
   loadVisualContent
 } from '@/studio/sceneVisuals'
@@ -171,7 +155,6 @@ let resizeObserver
 let animationFrame = 0
 let lastFpsAt = 0
 let lastHudAt = 0
-let lastRenderedAt = 0
 let renderedFrames = 0
 let renderDirty = true
 let visualRoot
@@ -188,7 +171,6 @@ let headlight
 let cameraDirection
 let loadEpoch = 0
 const fixedCameras = new Map()
-const passiveRenderIntervalMs = 1000 / 30
 
 function markRenderDirty() {
   renderDirty = true
@@ -340,17 +322,16 @@ function renderFrame(now) {
   animationFrame = requestAnimationFrame(renderFrame)
   controls.enabled = cameraChoice.value === 'free'
   const cameraChanged = controls.enabled ? controls.update() : false
-  // Runtime位姿流只有30Hz。没有新位姿或相机操作时继续按显示器刷新率
-  // 重绘50万三角面的场景只会占满GPU，并不会让仿真动作更平滑。
+  // 仅在收到新位姿或相机发生变化时渲染。位姿流已由 Runtime 限频，
+  // 不再叠加 33.3ms 门限：它与浏览器 60Hz 刷新相位交错时，会把
+  // 本可显示的新帧推迟到第三次刷新，造成额外的 20fps 阶梯。
   if (!renderDirty && !cameraChanged) return
-  if (!cameraChanged && now - lastRenderedAt < passiveRenderIntervalMs) return
   drawScene()
   if (selectionBox && selectedNodes.length) {
     selectionBox.box.makeEmpty()
     for (const node of selectedNodes) selectionBox.box.expandByObject(node)
   }
   renderDirty = false
-  lastRenderedAt = now
   renderedFrames += 1
   if (now - lastFpsAt >= 1000) {
     measuredFps.value = (renderedFrames * 1000) / (now - lastFpsAt)
@@ -364,14 +345,30 @@ function drawScene() {
     cameraChoice.value === 'free' ? freeCamera : fixedCameras.get(cameraChoice.value)
   if (activeCamera) {
     activeCamera.getWorldDirection(cameraDirection)
-    headlight.position.copy(activeCamera.position)
-    headlight.target.position.copy(activeCamera.position).addScaledVector(cameraDirection, 10)
+    // 动态相机的 position 属于连杆局部坐标，照明必须跟随相机世界坐标。
+    activeCamera.getWorldPosition(headlight.position)
+    headlight.target.position.copy(headlight.position).addScaledVector(cameraDirection, 10)
     headlight.target.updateMatrixWorld()
     renderer.render(scene, activeCamera)
   }
 }
 
 function fitFreeCamera() {
+  if (applyInitialSceneView(THREE, visualRoot, freeCamera, controls)) {
+    markRenderDirty()
+    return
+  }
+  const preferred = fixedCameras.get(viewerScene.value?.default_camera_id)
+  if (preferred) {
+    // 室内场景优先从 Runtime 提供的工作视角进入自由观察；整栋房屋的
+    // 包围盒只适合全景，不能把机器人操作区缩成一个点。旧场景维持原取景。
+    preferred.getWorldPosition(freeCamera.position)
+    preferred.getWorldDirection(cameraDirection)
+    controls.target.copy(freeCamera.position).addScaledVector(cameraDirection, 2)
+    controls.update()
+    markRenderDirty()
+    return
+  }
   // 地面可以是数百米，不能参与自动取景；否则真实对象会缩成画面中的一个点。
   const bounds = new THREE.Box3()
   for (const nodes of sceneIndex.bySource.values()) {
@@ -398,12 +395,8 @@ function buildFixedCameras(descriptors) {
   for (const camera of fixedCameras.values()) camera.parent?.remove(camera)
   fixedCameras.clear()
   for (const descriptor of descriptors || []) {
-    const rig = createSemanticCoordinateRoot(THREE)
     const camera = new THREE.PerspectiveCamera(Number(descriptor.fovy || 45), 1, 0.01, 500)
-    camera.position.fromArray(descriptor.position)
-    camera.quaternion.fromArray(descriptor.quaternion_xyzw)
-    rig.add(camera)
-    scene.add(rig)
+    attachViewerCamera(THREE, camera, descriptor, sceneIndex.dynamic, scene)
     fixedCameras.set(descriptor.camera_id, camera)
   }
   if (cameraChoice.value !== 'free' && !fixedCameras.has(cameraChoice.value)) {
@@ -453,7 +446,12 @@ async function loadCurrentScene() {
     scene.add(visualRoot)
     sceneIndex = indexViewerScene(visualRoot, descriptor.dynamic_node_order)
     viewerScene.value = descriptor
+    // 视场角属于当前场景的初始视图，不把上个 Runtime 的取景配置带入新场景。
+    freeCamera.fov = 45
     buildFixedCameras(descriptor.cameras)
+    if (descriptor.default_camera_id && fixedCameras.has(descriptor.default_camera_id)) {
+      cameraChoice.value = descriptor.default_camera_id
+    }
     fitFreeCamera()
     updateSelection()
     markRenderDirty()

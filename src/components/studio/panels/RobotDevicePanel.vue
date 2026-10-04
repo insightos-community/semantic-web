@@ -1,20 +1,3 @@
-<!--
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
 <template>
   <section class="robot-device-panel" data-testid="robot-device-panel">
     <header v-if="robot" class="device-heading">
@@ -199,7 +182,7 @@ watch(robotId, loadDevice, { immediate: true })
   display: grid;
   width: 38px;
   height: 38px;
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--sf-brand-soft);
   color: var(--sf-brand);
   place-items: center;
@@ -209,8 +192,8 @@ watch(robotId, loadDevice, { immediate: true })
 }
 .identity span {
   color: var(--sf-role-robot);
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 380;
   letter-spacing: 0.1em;
 }
 .identity h2 {
@@ -221,7 +204,7 @@ watch(robotId, loadDevice, { immediate: true })
   margin: 0;
   color: var(--sf-text-disabled);
   font-family: ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 11px;
 }
 .device-tabs {
   display: flex;
@@ -253,7 +236,7 @@ watch(robotId, loadDevice, { immediate: true })
   padding: 1px 5px;
   border-radius: 8px;
   background: var(--sf-bg-tertiary);
-  font-size: 9px;
+  font-size: 11px;
   font-style: normal;
 }
 .device-content {
@@ -278,14 +261,14 @@ watch(robotId, loadDevice, { immediate: true })
   gap: 6px;
   padding: 13px;
   border: 1px solid var(--sf-border-light);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--sf-bg-secondary);
   flex-direction: column;
 }
 .overview-grid span,
 .overview-grid small {
   color: var(--sf-text-disabled);
-  font-size: 9px;
+  font-size: 11px;
 }
 .overview-grid b {
   overflow: hidden;
@@ -299,7 +282,7 @@ watch(robotId, loadDevice, { immediate: true })
   margin-top: 14px;
   padding: 13px;
   border: 1px solid var(--sf-border-light);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--sf-bg-secondary);
 }
 .boundary-note svg {
@@ -312,7 +295,7 @@ watch(robotId, loadDevice, { immediate: true })
 .boundary-note p {
   margin: 4px 0 0;
   color: var(--sf-text-secondary);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.6;
 }
 .history {
@@ -344,7 +327,7 @@ watch(robotId, loadDevice, { immediate: true })
   overflow: hidden;
   color: var(--sf-text-disabled);
   font-family: ui-monospace, monospace;
-  font-size: 9px;
+  font-size: 11px;
   text-overflow: ellipsis;
 }
 .empty {

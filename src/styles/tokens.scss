@@ -1,93 +1,89 @@
-/*
-Copyright 2026 InsightOS
-SPDX-License-Identifier: Apache-2.0
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
 // Semantic Studio design tokens.
 // The default theme follows the light, card-based development workspace used by
 // the former dev-ldm frontend. Dark mode remains available through html.dark.
+// =====================================================================================
+// 2026-09-02 Semantic v1.0 skin — 由 semantic-theme.css design-language 替换。
+// 品牌蓝 #0253FD / 深蓝 #021976 / 星黄 #FFE101 / 星橙 #FF9000；字体 MiSans VF；
+// 圆角 12/8/4；阴影单层见 semantic-theme.css §4。见 ~/AI_Work/design/Semantic_v1.0_设计语言Tokens.md
+// =====================================================================================
 
 :root {
   color-scheme: light;
 
-  // Surfaces
-  --sf-bg-canvas: #f0f2f9;
-  --sf-bg-primary: #f5f6fc;
+  // Surfaces (灰色基底，保持中性卡片工作区)
+  --sf-bg-canvas: #eef1f6;
+  --sf-bg-primary: #f5f6fa;
   --sf-bg-secondary: #ffffff;
-  --sf-bg-tertiary: #f7f9fe;
-  --sf-bg-hover: #eef0fb;
-  --sf-bg-overlay: rgba(24, 32, 52, 0.52);
+  --sf-bg-tertiary: #f7f8fb;
+  --sf-bg-hover: #edf1fe;
+  --sf-bg-overlay: rgba(13, 20, 40, 0.55);
 
   // Borders and shadows
-  --sf-border: #d4d8ec;
-  --sf-border-light: #e3e5ef;
-  --sf-shadow-sm: 0 4px 14px rgba(49, 64, 167, 0.06);
-  --sf-shadow-md: 0 10px 30px rgba(49, 64, 167, 0.1);
+  --sf-border: #d5dae6;
+  --sf-border-light: #e4e8f0;
+  --sf-shadow-sm: 0 4px 14px rgba(24, 46, 110, 0.06);
+  --sf-shadow-md: 0 10px 30px rgba(2, 83, 253, 0.1);
 
   // Typography
-  --sf-text-primary: #151926;
-  --sf-text-secondary: #6e7182;
-  --sf-text-disabled: #9298a6;
+  --sf-font-family:
+    'MiSans VF', 'MiSans', 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', 'Noto Sans SC',
+    'Noto Sans CJK SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --sf-text-primary: #14151f;
+  --sf-text-secondary: #62677a;
+  --sf-text-disabled: #9aa0af;
 
-  // Brand
-  --sf-brand: #3c54f0;
-  --sf-brand-hover: #4356f2;
-  --sf-brand-active: #3140a7;
-  --sf-brand-soft: #e6eafe;
+  // Brand —— Semantic v1.0 主品牌蓝（2026-09 定稿，潘通 2388C）
+  --sf-brand: #0253fd;
+  --sf-brand-hover: #1c6dfe;
+  --sf-brand-active: #021976;
+  --sf-brand-soft: rgba(2, 83, 253, 0.1);
+
+  // 辅助色（具识/Logo 呼应）
+  --sf-brand-deep: #021976;
+  --sf-brand-yellow: #ffe101;
+  --sf-brand-orange: #ff9000;
 
   // Agent roles
-  --sf-role-leader: #315cec;
-  --sf-role-robot: #12a680;
-  --sf-role-monitor: #df8a22;
-  --sf-role-map: #7655de;
-  --sf-role-studio: #d64f82;
-  --sf-role-query: #4e7f9d;
+  --sf-role-leader: #0253fd;
+  --sf-role-robot: #17b74e;
+  --sf-role-monitor: #ff9a14;
+  --sf-role-map: #8b5cf6;
+  --sf-role-studio: #ec4899;
+  --sf-role-query: #0ea5e9;
 
   // Event channels
-  --sf-channel-dialogue: #315cec;
-  --sf-channel-alert: #df8a22;
-  --sf-channel-trace: #778198;
-  --sf-channel-artifact: #7655de;
-  --sf-channel-interaction: #d64f82;
+  --sf-channel-dialogue: #0253fd;
+  --sf-channel-alert: #ff9000;
+  --sf-channel-trace: #94a3b8;
+  --sf-channel-artifact: #8b5cf6;
+  --sf-channel-interaction: #ec4899;
 
-  // Status
-  --sf-success: #2eba7b;
-  --sf-warning: #e2a33d;
-  --sf-danger: #e35b65;
-  --sf-info: #397bd9;
-  --sf-status-running-text: #18a261;
-  --sf-status-running-bg: rgba(24, 162, 97, 0.1);
-  --sf-status-running-border: rgba(24, 162, 97, 0.28);
-  --sf-status-idle-text: #778198;
-  --sf-status-idle-bg: rgba(119, 129, 152, 0.1);
-  --sf-status-idle-border: rgba(119, 129, 152, 0.25);
-  --sf-status-starting-text: #397bd9;
-  --sf-status-starting-bg: rgba(57, 123, 217, 0.1);
-  --sf-status-starting-border: rgba(57, 123, 217, 0.25);
+  // Status —— Semantic 功能色
+  --sf-success: #17b74e;
+  --sf-warning: #ff9a14;
+  --sf-danger: #f53f3f;
+  --sf-info: #0253fd;
+  --sf-status-running-text: #18a661;
+  --sf-status-running-bg: rgba(24, 166, 97, 0.1);
+  --sf-status-running-border: rgba(24, 166, 97, 0.28);
+  --sf-status-idle-text: #7c8596;
+  --sf-status-idle-bg: rgba(124, 133, 150, 0.1);
+  --sf-status-idle-border: rgba(124, 133, 150, 0.25);
+  --sf-status-starting-text: #0253fd;
+  --sf-status-starting-bg: rgba(2, 83, 253, 0.08);
+  --sf-status-starting-border: rgba(2, 83, 253, 0.25);
   --sf-status-stopped-text: #9aa3b8;
   --sf-status-stopped-bg: rgba(154, 163, 184, 0.1);
   --sf-status-stopped-border: rgba(154, 163, 184, 0.24);
   --sf-status-success-text: var(--sf-success);
-  --sf-status-success-bg: rgba(24, 162, 97, 0.1);
-  --sf-status-success-border: rgba(24, 162, 97, 0.28);
+  --sf-status-success-bg: rgba(23, 183, 78, 0.1);
+  --sf-status-success-border: rgba(23, 183, 78, 0.28);
   --sf-status-warning-text: var(--sf-warning);
-  --sf-status-warning-bg: rgba(223, 138, 34, 0.1);
-  --sf-status-warning-border: rgba(223, 138, 34, 0.28);
+  --sf-status-warning-bg: rgba(255, 154, 20, 0.1);
+  --sf-status-warning-border: rgba(255, 154, 20, 0.28);
   --sf-status-danger-text: var(--sf-danger);
-  --sf-status-danger-bg: rgba(216, 78, 78, 0.1);
-  --sf-status-danger-border: rgba(216, 78, 78, 0.28);
+  --sf-status-danger-bg: rgba(245, 63, 63, 0.1);
+  --sf-status-danger-border: rgba(245, 63, 63, 0.28);
 
   // Type and spacing
   --sf-font-xs: 12px;
@@ -122,7 +118,14 @@ limitations under the License.
 :root,
 html.dark {
   // Element Plus bridge
+  --el-font-family: var(--sf-font-family);
   --el-color-primary: var(--sf-brand);
+  --el-color-primary-light-3: #3d7dfe;
+  --el-color-primary-light-5: #7ba6fd;
+  --el-color-primary-light-7: #b3cdfe;
+  --el-color-primary-light-8: #cddefe;
+  --el-color-primary-light-9: #e8f0ff;
+  --el-color-primary-dark-2: #0242cb;
   --el-color-success: var(--sf-success);
   --el-color-warning: var(--sf-warning);
   --el-color-danger: var(--sf-danger);
@@ -147,23 +150,25 @@ html.dark {
 
 html.dark {
   color-scheme: dark;
-  --sf-bg-canvas: #161927;
-  --sf-bg-primary: #1b1f2d;
-  --sf-bg-secondary: #222738;
-  --sf-bg-tertiary: #272d40;
-  --sf-bg-hover: #2d3449;
-  --sf-bg-overlay: rgba(12, 15, 25, 0.8);
-  --sf-border: #3b435b;
-  --sf-border-light: #31384d;
-  --sf-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.16);
-  --sf-shadow-md: 0 14px 40px rgba(0, 0, 0, 0.25);
-  --sf-text-primary: #f2f3fa;
-  --sf-text-secondary: #b8bfd2;
-  --sf-text-disabled: #7f899f;
-  --sf-brand: #7c83ff;
-  --sf-brand-hover: #9095ff;
-  --sf-brand-active: #6269dd;
-  --sf-brand-soft: rgba(124, 131, 255, 0.17);
+  --sf-bg-canvas: #0e1220;
+  --sf-bg-primary: #141926;
+  --sf-bg-secondary: #1a2032;
+  --sf-bg-tertiary: #20263c;
+  --sf-bg-hover: #2c3352;
+  --sf-bg-overlay: rgba(8, 10, 18, 0.82);
+  --sf-border: #37405e;
+  --sf-border-light: #2c3450;
+  --sf-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.2);
+  --sf-shadow-md: 0 14px 40px rgba(0, 0, 0, 0.32);
+  --sf-text-primary: #eef1fb;
+  --sf-text-secondary: #b6bdd2;
+  --sf-text-disabled: #838ca4;
+
+  // Brand — 深色模式保持可辨识的 Semantic 蓝（不偏紫）
+  --sf-brand: #5b8dff;
+  --sf-brand-hover: #7ba6fd;
+  --sf-brand-active: #0253fd;
+  --sf-brand-soft: rgba(91, 141, 255, 0.16);
   --el-color-white: var(--sf-bg-secondary);
   --el-color-black: #000000;
 }

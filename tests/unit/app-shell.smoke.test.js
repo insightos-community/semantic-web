@@ -1,3 +1,18 @@
+// Copyright 2026 InsightOS
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // @vitest-environment jsdom
 // AppShell v2 组件级冒烟：真实路由（memory history）挂载主框架，
 // 覆盖顶栏/面包屑/一级侧栏选中态/折叠切换（持久化）/用户卡 popover 退出。

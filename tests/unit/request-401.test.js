@@ -1,3 +1,18 @@
+// Copyright 2026 InsightOS
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // request.js 401 单飞刷新 + 原请求重放链路（14-frontend-api §3）
 // 后端契约：refresh 无独立 refresh_token，Bearer 旧 token 换新 token；
 // /auth/* 请求自身的 401 不再触发刷新（防递归）。

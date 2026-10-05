@@ -1,3 +1,18 @@
+// Copyright 2026 InsightOS
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // 从 round01 的 place-object 记录抽取协议形状；身份和字节响应均为隔离测试数据。
 // 真实记录的 stage.completed 引用累计，但 sensor.frame 每次只引用本次拍摄帧。
 export function recordedPlaceEvidence(id = 'recorded-place') {

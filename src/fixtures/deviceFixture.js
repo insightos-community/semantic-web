@@ -347,7 +347,8 @@ const devices = [
     configuration: {
       sdk: {
         package: 'semantic-robot-sdk-r1pro',
-        endpoint: 'http://10.20.0.41:8090',
+        // 示例 endpoint，非真实内网地址（RFC 5737 文档保留段 192.0.2.0/24）。
+        endpoint: 'http://192.0.2.41:8090',
         firmware_profile: 'r1pro-firmware-2026.08',
         providers: { navigation: 'vendor_navigation', motion: 'vendor_motion' }
       },

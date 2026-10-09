@@ -11,3 +11,7 @@ test-results/
 .DS_Store
 playwright-report/
 test-results/
+
+# Python bytecode caches (CI scripts and tooling)
+__pycache__/
+*.pyc

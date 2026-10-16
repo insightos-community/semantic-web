@@ -154,20 +154,11 @@ limitations under the License.
             <span v-else class="readonly-value">区域（半透明平面）</span>
           </el-form-item>
           <el-form-item label="尺寸（米）">
-            <div class="axis-grid axis-grid-three">
-              <label v-for="axis in axes" :key="'size-' + axis" class="axis-field">
-                <span>{{ axis.toUpperCase() }}</span>
-                <el-input-number
-                  :key="`size-input-${axis}-${editing}`"
-                  v-model="draft.geometry.size[axis]"
-                  :aria-label="`尺寸 ${axis.toUpperCase()}`"
-                  :controls="false"
-                  :disabled="!editing"
-                  :min="0.01"
-                  :step="0.1"
-                />
-              </label>
-            </div>
+            <MapGeometryDimensions
+              v-model="draft.geometry"
+              :disabled="!editing"
+              :controls="false"
+            />
           </el-form-item>
           <el-form-item label="标签">
             <el-select
@@ -273,6 +264,7 @@ limitations under the License.
 </template>
 
 <script setup>
+import MapGeometryDimensions from '@/components/studio/MapGeometryDimensions.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { ArrowRight } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'

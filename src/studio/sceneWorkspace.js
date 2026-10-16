@@ -26,7 +26,7 @@ export function hasLiveScene(store) {
 }
 
 export function sceneWorkspaceView(requested, store) {
-  if (requested === 'map') return 'map'
+  if (requested === 'map' || (!requested && store.realScene)) return 'map'
   if (!hasLiveScene(store)) return 'setup'
   return ['setup', 'live', 'sensors'].includes(requested) ? requested : 'live'
 }
@@ -34,11 +34,19 @@ export function sceneWorkspaceView(requested, store) {
 // 目录刷新只补全无效选择。面板的 resourceId 是打开窗口时的入口，不能在
 // 每次预览轮询后覆盖用户随后选中的场景（项目第一项可能是另一个任务）。
 export function sceneSelectionAfterRefresh(current, requested, store) {
-  const exists = (id) => store.projectScenes.some((item) => item.project_scene_id === id)
+  const exists = (id) =>
+    Boolean(
+      id &&
+      (id === store.realScene?.scene_id ||
+        store.projectScenes.some((item) => item.project_scene_id === id))
+    )
   if (exists(current)) return current
   if (exists(requested)) return requested
   return (
-    runningProjectScene(store)?.project_scene_id || store.projectScenes[0]?.project_scene_id || ''
+    store.realScene?.scene_id ||
+    runningProjectScene(store)?.project_scene_id ||
+    store.projectScenes[0]?.project_scene_id ||
+    ''
   )
 }
 
@@ -49,10 +57,16 @@ export function runningProjectScene(store) {
   if (!store.instance) return null
   return (
     store.projectScenes.find((item) => {
-      const catalog = store.catalogById(item.catalog_scene_id)
+      const catalog = store.catalogById?.(item.catalog_scene_id)
       return key
         ? catalog?.versions?.some((version) => version.runtime_scene_key === key)
         : item.catalog_scene_id === store.catalogSceneId
     }) || null
   )
+}
+
+// Explicit panel entry selects the requested scene. Polling uses the refresh
+// helper above so it never overwrites the user's later selection.
+export function selectWorkspaceScene(store, requested = '', current = '') {
+  return sceneSelectionAfterRefresh(requested, current, store)
 }

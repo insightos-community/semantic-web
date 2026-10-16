@@ -35,11 +35,13 @@ const normalizeExecution = (execution, current = null) => {
   return {
     ...current,
     ...execution,
-    ...(execution.details_included === false ? {
-      input: current?.input,
-      input_bindings: current?.input_bindings,
-      result: current?.result
-    } : {}),
+    ...(execution.details_included === false
+      ? {
+          input: current?.input,
+          input_bindings: current?.input_bindings,
+          result: current?.result
+        }
+      : {}),
     stages: execution.stages == null ? asArray(current?.stages) : asArray(execution.stages),
     actions: execution.actions == null ? asArray(current?.actions) : asArray(execution.actions),
     feedback:
@@ -387,14 +389,20 @@ export const useRobotStore = defineStore('robotExecutions', {
     async loadRunTrace(run, { force = false } = {}) {
       if (!run?.id || this.traceLoadingIds.includes(run.id)) return
       const cached = this.tracesByRun[run.id]?.run
-      if (!force && ['completed', 'failed', 'cancelled'].includes(cached?.status) &&
-          asNumber(cached.revision) >= asNumber(run.revision)) return
+      if (
+        !force &&
+        ['completed', 'failed', 'cancelled'].includes(cached?.status) &&
+        asNumber(cached.revision) >= asNumber(run.revision)
+      )
+        return
       const generation = this.scopeGeneration
       this.traceLoadingIds.push(run.id)
       delete this.traceErrors[run.id]
       try {
-        const detail = run.trace_id && ['completed', 'failed', 'cancelled'].includes(run.status)
-          ? run : (await getRun(run.id))?.run
+        const detail =
+          run.trace_id && ['completed', 'failed', 'cancelled'].includes(run.status)
+            ? run
+            : (await getRun(run.id))?.run
         if (generation !== this.scopeGeneration) return
         if (!detail?.trace_id) {
           this.traceErrors[run.id] = '该 Run 未提供 Trace 引用'

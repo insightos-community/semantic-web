@@ -21,17 +21,9 @@ Validation:
 
 ```sh
 npx vitest run tests/unit/map-view-state.test.js tests/unit/v030-map-navigation.test.js
-node tests/integration/map-view-memory.mjs <url> <evidence-dir> <token-file> <project-id> [preview-web-root]
 ```
 
-The browser check uses a fresh browser context, compares rendered pixels before
-and after restoration, covers both modes, panel reopen, map switching, data
-refresh and resetting, and rejects any HTTP mutation/robot action request.
-
-The current production renderer has a source revision unavailable locally. Use
-`tools/map-view-overlay.mjs` on a normalized deployment snapshot, followed by the
-real repository's `semantic/tools/version-web-assets.py`. The overlay takes the
-persistence block directly from MapPanel source and preserves the deployed
-renderer geometry, map-frame rotation, picking and outline implementations.
-Do not replace production with a full local `dist` until the original renderer
-source is reconciled.
+Unit tests cover camera capture/restore, invalid storage, map identity and
+orthographic resizing. Pixel-level live-scene validation is a separate deployment
+check; historical private overlay scripts are not included in this branch.
+See [integration acceptance](r1pro-integration-acceptance.md).

@@ -144,7 +144,11 @@ export function createWsClient(options = {}) {
       setStatus(WS_STATUS.ONLINE)
       startPing()
       // Project Studio 的 sequence 是 Project 全局游标；旧 Chat 仍按事件 ID 续传。
-      if (lastSequence != null) send('sync', { after_sequence: lastSequence, ...(initialEventEpoch ? { event_epoch: initialEventEpoch } : {}) })
+      if (lastSequence != null)
+        send('sync', {
+          after_sequence: lastSequence,
+          ...(initialEventEpoch ? { event_epoch: initialEventEpoch } : {})
+        })
       else if (lastEventId) send('sync', { last_event_id: lastEventId })
     }
     ws.onmessage = (evt) => handleMessage(evt.data)

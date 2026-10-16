@@ -52,8 +52,10 @@ export function createDeviceSubscription({ afterSequence = 0, eventEpoch, onGap 
     if (!event || closed) return
     // 侧栏手动补查也会推进快照游标，后续事件应从这个新基线继续。
     lastSequence = Math.max(lastSequence, devices.lastEventSequence)
-    if ((event.type === 'error' && event.code === 'SYNC_FAILED') ||
-        (event.event_epoch && event.event_epoch !== epoch)) {
+    if (
+      (event.type === 'error' && event.code === 'SYNC_FAILED') ||
+      (event.event_epoch && event.event_epoch !== epoch)
+    ) {
       api.stop()
       devices.stale = true
       onGap?.({ error: event, previousSequence: lastSequence, resetCursor: true })

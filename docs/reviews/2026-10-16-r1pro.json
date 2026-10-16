@@ -1,0 +1,426 @@
+{
+  "tool": "@alibaba-group/open-code-review",
+  "version": "1.13.0",
+  "mode": "delegate",
+  "reviewer": "host developer agent",
+  "reviewed_base": "246b586e0e393c766944ba127ab7f39ef33d0f34",
+  "reviewed_head": "ff45882f358626a5161eb0af6bcb0cb9a8c50eb7",
+  "scope": "Product code before this documentation/acceptance commit. This receipt is not an independent external-model approval or physical validation.",
+  "summary": {
+    "total_files": 59,
+    "reviewed_files": 40,
+    "skipped_files": 19,
+    "coverage_rate": 0.678,
+    "reviewable_coverage_rate": 1.0
+  },
+  "checklist": [
+    {
+      "path": "src/components/device/DeviceSkillsPanel.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/device/DeviceStatus.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/device/PilotEnrollmentDialog.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/interaction/renderers/FormRenderer.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/skills/RobotSkillDetail.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/skills/SkillList.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/MapEntityInspector.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/MapGeometryDimensions.vue",
+      "change_status": "added",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/PilotMapSource.vue",
+      "change_status": "added",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/ProjectRealRobots.vue",
+      "change_status": "added",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/StudioBottomPanel.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/StudioContextInspector.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/StudioPrimarySidebar.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/panels/ActivityPanel.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/panels/MapPanel.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/panels/RealScenePanel.vue",
+      "change_status": "added",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/panels/SceneWorkspacePanel.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/components/studio/panels/WorkflowRunPanel.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/config/modelPresets.js",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/devices/skillCompatibility.js",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/devices/subscription.js",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/robot/skillCatalog.js",
+      "change_status": "added",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/stores/device.js",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/stores/robot.js",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/stores/simulation.js",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/stores/skills.js",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/studio/executionEvidence.js",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/studio/formFields.js",
+      "change_status": "added",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/studio/mapViewState.js",
+      "change_status": "added",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/studio/pilotMapVisuals.js",
+      "change_status": "added",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/studio/robotMapCloud.js",
+      "change_status": "added",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/studio/robotTwin.js",
+      "change_status": "added",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/studio/sceneWorkspace.js",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/studio/subtaskProgress.js",
+      "change_status": "added",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/studio/taskWaitingView.js",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/views/DeviceDetailView.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/views/DevicesView.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/views/SkillsView.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/views/StudioView.vue",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "src/ws/client.js",
+      "change_status": "modified",
+      "review_status": "reviewed",
+      "reason": "Host-agent diff and reachable-context review using OCR delegate rules."
+    },
+    {
+      "path": "docs/default-real-scene.md",
+      "change_status": "added",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "docs/map-view-persistence.md",
+      "change_status": "added",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/device-skill-compatibility.test.js",
+      "change_status": "modified",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/device-skills-panel.test.js",
+      "change_status": "modified",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/interaction-form.test.js",
+      "change_status": "added",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/map-view-state.test.js",
+      "change_status": "added",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/multi-agent-conversation-waiting.test.js",
+      "change_status": "modified",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/pilot-map-source.test.js",
+      "change_status": "added",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/pilot-map-visuals.test.js",
+      "change_status": "added",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/robot-map-cloud.test.js",
+      "change_status": "added",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/robot-skill-catalog.test.js",
+      "change_status": "added",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/robot-twin.test.js",
+      "change_status": "added",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/simulation-store.test.js",
+      "change_status": "modified",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/skills-store.test.js",
+      "change_status": "modified",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/studio-device-state.test.js",
+      "change_status": "modified",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/studio-execution-evidence.test.js",
+      "change_status": "modified",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/studio-scene-workspace.test.js",
+      "change_status": "modified",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/subtask-progress.test.js",
+      "change_status": "added",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    },
+    {
+      "path": "tests/unit/ws-client.test.js",
+      "change_status": "modified",
+      "review_status": "skipped",
+      "reason": "OCR default path filter: test/documentation; automated tests executed separately."
+    }
+  ],
+  "findings": [
+    {
+      "path": "src/components/device/DeviceSkillsPanel.vue",
+      "lines": [
+        151,
+        158
+      ],
+      "category": "correctness",
+      "severity": "medium",
+      "content": "Instance display filtering lost upstream Ability compatibility for unbound installation candidates. Exact bindings remain visible; installation candidates now reuse compatibility checks.",
+      "status": "fixed",
+      "issue": "#11"
+    },
+    {
+      "path": "src/devices/skillCompatibility.js",
+      "lines": [
+        18,
+        44
+      ],
+      "category": "correctness",
+      "severity": "medium",
+      "content": "The Registry accepts SDK cancel_actions with empty or null stop_actions, but the UI required a separate stop Ability. The UI now checks every declared action without rejecting the Registry-validated empty stop list.",
+      "status": "fixed",
+      "issue": "#16"
+    },
+    {
+      "path": "src/studio/taskWaitingView.js",
+      "lines": [
+        74,
+        90
+      ],
+      "category": "correctness",
+      "severity": "medium",
+      "content": "The UI hid existing resume/recovery endpoints after a server restart or pause. Expose preparation resume and abandoned/deferred recovery while retaining backend admission checks.",
+      "status": "fixed",
+      "issue": "#13"
+    },
+    {
+      "path": "src/studio/sceneWorkspace.js",
+      "lines": [
+        48,
+        68
+      ],
+      "category": "correctness",
+      "severity": "low",
+      "content": "The merged helper assumed catalogById existed in minimal store projections. Preserve upstream fallback behavior with optional lookup.",
+      "status": "fixed",
+      "issue": "#10"
+    }
+  ],
+  "limitations": [
+    "Tests and documentation follow the OCR default exclusion policy; unit/integration suites are reported independently.",
+    "No live robot execution, deployment, independent model review or administrator approval of main is claimed."
+  ]
+}

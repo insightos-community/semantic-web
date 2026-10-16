@@ -74,11 +74,20 @@ describe('设备页 Robot Skill 安装候选', () => {
       installableRobotSkills(
         [
           { name: 'incomplete' },
-          { ...packages[3], stop_actions: [] },
+          { ...packages[3], stop_actions: undefined },
           { ...packages[3], required_actions: [] }
         ],
         robotWith('franka_panda', packages)
       )
     ).toEqual([])
+  })
+
+  it('已通过 Registry 停止策略校验的 SDK Task 技能无需单独停止 Ability', () => {
+    const sdk = { ...packages[3], name: 'r1pro-manipulation', stop_actions: [] }
+    const robot = robotWith('R1PRO', [sdk])
+    expect(installableRobotSkills([sdk], robot)).toEqual([sdk])
+    expect(installableRobotSkills([{ ...sdk, stop_actions: null }], robot)).toHaveLength(1)
+    robot.abilities[0].action_details = [action('vla.execute_policy', 1)]
+    expect(installableRobotSkills([sdk], robot)).toEqual([])
   })
 })

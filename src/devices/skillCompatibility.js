@@ -14,8 +14,10 @@
 // limitations under the License.
 
 // 设备页展示当前 Robot 的安装候选，不直接展示 Server 的全局技能库。
-// 与 Pilot 的动作契约一致，同时核对执行和停止动作的类型、schema_version；
+// 与 Pilot 的动作契约一致，同时核对声明的执行和停止动作的类型、schema_version；
 // 未声明型号限制仅表示不限型号，仍需具备技能要求的全部 Ability 动作。
+// Registry 发布时已校验停止策略：cancel_actions 使用 SDK Task 取消，
+// 合法的 stop_actions 可以为空。这里不能额外要求一个不存在的停止 Ability。
 export function installableRobotSkills(packages, robot) {
   const actionKey = (action) => `${action.type}@${action.schema_version}`
   const actions = new Set(
@@ -32,7 +34,7 @@ export function installableRobotSkills(packages, robot) {
     const stop = skill.stop_actions || []
     return (
       required.length > 0 &&
-      stop.length > 0 &&
+      (Array.isArray(skill.stop_actions) || skill.stop_actions === null) &&
       [...required, ...stop].every((action) => actions.has(actionKey(action)))
     )
   })

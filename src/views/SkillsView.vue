@@ -49,10 +49,19 @@ limitations under the License.
             :categories="categories"
             :tags="availableTags"
           />
+          <label class="robot-instance-filter">
+            Robot Skill 实例
+            <select v-model="selectedRobotId" aria-label="Robot Skill 实例">
+              <option value="">全部实例</option>
+              <option v-for="robot in devices.robots" :key="robot.robot_id" :value="robot.robot_id">
+                {{ robot.display_name || robot.robot_id }} · {{ robot.robot_id }}
+              </option>
+            </select>
+          </label>
         </template>
         <SkillList :groups="filteredGroups" :active-id="activeCatalogID" @select="onSelect" />
         <template #footer>
-          <span class="catalog-hint">分类与标签可组合筛选</span>
+          <span class="catalog-hint">Robot Skill 按关联实例分组，条目显示精确版本</span>
         </template>
       </SideList>
 
@@ -124,6 +133,7 @@ import RobotSkillDetail from '@/components/skills/RobotSkillDetail.vue'
 import { useDeviceStore } from '@/stores/device'
 import { filterSkills, groupSkills, skillTags, useSkillsStore } from '@/stores/skills'
 import { useUiStore } from '@/stores/ui'
+import { robotHasSkill, robotSkillGroups } from '@/robot/skillCatalog'
 
 const skills = useSkillsStore()
 const devices = useDeviceStore()
@@ -132,6 +142,7 @@ const refreshing = ref(false)
 const search = ref('')
 const category = ref('all')
 const selectedTags = ref([])
+const selectedRobotId = ref('')
 
 const categories = computed(() =>
   [...new Set(skills.catalogSkills.map((skill) => skill.category || 'general'))].sort()
@@ -140,13 +151,29 @@ const availableTags = computed(() =>
   [...new Set(skills.catalogSkills.flatMap((skill) => skillTags(skill)))].sort()
 )
 const filteredSkills = computed(() =>
-  filterSkills(skills.catalogSkills, {
-    query: search.value,
-    category: category.value,
-    tags: selectedTags.value
-  })
+  filterSkills(
+    skills.catalogSkills.filter(
+      (skill) =>
+        !selectedRobotId.value ||
+        skill.skill_kind !== 'robot' ||
+        robotHasSkill(devices.byId(selectedRobotId.value), skill)
+    ),
+    {
+      query: search.value,
+      category: category.value,
+      tags: selectedTags.value
+    }
+  )
 )
-const filteredGroups = computed(() => groupSkills(filteredSkills.value))
+const filteredGroups = computed(() => [
+  ...groupSkills(filteredSkills.value.filter((skill) => skill.skill_kind !== 'robot')),
+  ...robotSkillGroups(
+    filteredSkills.value,
+    devices.robots.filter(
+      (robot) => !selectedRobotId.value || robot.robot_id === selectedRobotId.value
+    )
+  )
+])
 const activeCatalogID = computed(() => {
   if (!skills.activeName) return ''
   if (skills.activeKind === 'robot') {
@@ -188,7 +215,7 @@ async function onRefresh() {
   if (refreshing.value) return
   refreshing.value = true
   try {
-    await skills.load()
+    await Promise.all([skills.load(), devices.loadSnapshot()])
     const first = skills.catalogSkills[0]
     if (first) await skills.selectCatalog(first.catalog_id)
     ui.notify({ type: 'success', message: '技能库已刷新' })
@@ -201,6 +228,23 @@ async function onRefresh() {
 </script>
 
 <style scoped lang="scss">
+.robot-instance-filter {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0;
+  font-size: 12px;
+
+  select {
+    width: 100%;
+    min-width: 0;
+    padding: 6px;
+    color: var(--sf-text-primary);
+    background: var(--sf-bg-primary);
+    border: 1px solid var(--sf-border);
+    border-radius: 4px;
+  }
+}
+
 .skills-view {
   height: 100%;
   padding: 18px;

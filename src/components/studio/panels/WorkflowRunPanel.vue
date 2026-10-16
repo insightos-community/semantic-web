@@ -151,7 +151,7 @@ limitations under the License.
               ><b :title="item.goal || item.title">{{
                 compactTitle(item.title || item.goal, 'SubTask')
               }}</b
-              ><small>{{ item.kind }} · {{ item.reason || statusLabel(item.status) }}</small></span
+              ><small>{{ subtaskProgressLabel(item) }}</small></span
             >
             <DeviceStatus :status="item.status" />
           </button>
@@ -175,6 +175,7 @@ import { useInteractionsStore } from '@/stores/interactions'
 import TaskWaitingCard from '@/components/studio/TaskWaitingCard.vue'
 import DeviceStatus from '@/components/device/DeviceStatus.vue'
 import { durationLabel } from '@/robot/executionRecords'
+import { subtaskProgressLabel } from '@/studio/subtaskProgress'
 import { useExecutionScopeStore } from '@/stores/executionScope'
 import { openStudioPanel } from '@/studio/panelService'
 import { deriveTaskWaitingView, interactionForTask } from '@/studio/taskWaitingView'

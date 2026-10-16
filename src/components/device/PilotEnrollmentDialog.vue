@@ -32,7 +32,7 @@ limitations under the License.
         </div>
         <div class="command-block">
           <header>
-            <span>在 Robot 主机执行</span>
+            <span>在已部署 r1pro-versions 的 R1Pro / Q8B 上执行</span>
             <el-button text size="small" @click="copyCommand">复制命令</el-button>
           </header>
           <code>{{ command }}</code>
@@ -40,7 +40,7 @@ limitations under the License.
         <el-alert
           type="info"
           :closable="false"
-          title="启动器会通过局域网发现 Server，并自动启动 AbilityFramework、七类 Ability、Pilot，再由 Server 对账并下发期望 Robot Skill。"
+          title="此命令只领取并保存连接凭据，不启动服务。R1Pro 请在 ~/r1pro-versions 中先切换到 Semantic 版本，再单独启用 Pilot。其他机器人请使用其实际部署入口领取加入码。"
         />
       </div>
       <template #footer>
@@ -61,7 +61,7 @@ const creating = ref(false)
 const enrollment = ref(null)
 const command = computed(() =>
   enrollment.value
-    ? `semantic-robot-instance start --config /etc/semantic/robots/<robot-id>/robot-deployment.yaml --join-code ${enrollment.value.code}`
+    ? `~/r1pro-versions join --server '${window.location.origin.replaceAll("'", "'\\''")}' --join-code ${enrollment.value.code}`
     : ''
 )
 const expiresAt = computed(() => {
@@ -89,7 +89,7 @@ async function open() {
 async function copyCommand() {
   try {
     await navigator.clipboard.writeText(command.value)
-    ui.notify({ type: 'success', message: '启动命令已复制' })
+    ui.notify({ type: 'success', message: '配对命令已复制' })
   } catch {
     ui.notify({ type: 'error', message: '浏览器无法访问剪贴板，请手动复制命令' })
   }

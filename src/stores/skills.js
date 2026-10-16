@@ -180,6 +180,7 @@ export const useSkillsStore = defineStore('skills', {
           if (
             this.activeKind === 'robot' &&
             this.activeName === skill.name &&
+            this.activeVersion === skill.version &&
             this.robotSkills.some(
               (item) => item.name === skill.name && item.version === skill.version
             )
@@ -188,12 +189,20 @@ export const useSkillsStore = defineStore('skills', {
             if (!this.detail) this.detailError = 'Robot Skill 详情响应缺少 skill'
           }
         } catch (error) {
-          if (this.activeKind === 'robot' && this.activeName === skill.name) {
+          if (
+            this.activeKind === 'robot' &&
+            this.activeName === skill.name &&
+            this.activeVersion === skill.version
+          ) {
             this.detail = null
             this.detailError = error.message || 'Robot Skill 详情加载失败'
           }
         } finally {
-          if (this.activeKind === 'robot' && this.activeName === skill.name) {
+          if (
+            this.activeKind === 'robot' &&
+            this.activeName === skill.name &&
+            this.activeVersion === skill.version
+          ) {
             this.detailLoading = false
           }
         }

@@ -50,6 +50,8 @@ const labels = {
   announced: ['等待同步', 'warning'],
   synced: ['已同步', 'success'],
   installed: ['已安装', 'success'],
+  retained: ['已保留 · 未启用', 'idle'],
+  not_installed: ['未安装', 'idle'],
   disabled: ['已停用', 'idle'],
   pending: ['等待中', 'idle'],
   not_reported: ['未上报', 'idle'],

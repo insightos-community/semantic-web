@@ -144,7 +144,12 @@ export function createExecutionEvidence() {
             workflowView.value?.tasks?.some((task) => task.id === item.task_id))
         )
       })
-      .map((item) => ({ ...robots.tracesByRun[item.id]?.run, ...item }))
+      .map((item) => {
+        const detail = robots.tracesByRun[item.id]?.run
+        // A terminal GET /runs response supersedes a stale running event cache.
+        return detail && Number(detail.revision || 0) >= Number(item.revision || 0)
+          ? { ...item, ...detail } : { ...detail, ...item }
+      })
   })
   const traceRows = computed(() =>
     runs.value.flatMap((run) => runLogRows(run, robots.tracesByRun[run.id]))

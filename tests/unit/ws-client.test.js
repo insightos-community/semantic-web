@@ -60,3 +60,12 @@ describe('Project Studio WebSocket 续传', () => {
     client.disconnect()
   })
 })
+
+it('设备连接将服务实例与序号一起续传', () => {
+  const client = createWsClient({url:'ws://fixture/ws/devices', initialAfterSequence:344,
+    initialEventEpoch:'server-new', socketImpl:FakeSocket})
+  client.connect()
+  FakeSocket.latest.open()
+  expect(FakeSocket.latest.sent).toContainEqual({type:'sync',after_sequence:344,event_epoch:'server-new'})
+  client.disconnect()
+})

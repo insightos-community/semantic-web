@@ -527,13 +527,15 @@ async function bootstrap(id) {
   }
 }
 
-async function refreshDeviceCatalog() {
+async function refreshDeviceCatalog({ resetCursor = false } = {}) {
   if (reconcilingDevices) return
   reconcilingDevices = true
+  deviceSubscription?.stop()
+  deviceSubscription = null
   const generation = ++deviceGeneration
   const current = () => generation === deviceGeneration
   try {
-    const snapshot = await devices.loadSnapshot({ shouldApply: current })
+    const snapshot = await devices.loadSnapshot({ shouldApply: current, resetCursor })
     if (!snapshot || !current()) return
     for (const robot of devices.robots) {
       abilities.hydrateRobot(robot.robot_id, robot.abilities || [])
@@ -547,12 +549,13 @@ async function refreshDeviceCatalog() {
     if (current()) ui.notify({ type: 'warning', message: error.message || 'Robot 目录加载失败' })
   } finally {
     if (current()) {
-      // 初次快照失败仍建立事件连接；重试与重连继续补查权威状态。
-      deviceSubscription?.stop()
-      deviceSubscription = createDeviceSubscription({
-        afterSequence: devices.lastEventSequence,
-        onGap: refreshDeviceCatalog
-      }).start()
+      if (devices.snapshotStatus === 'ready' && !devices.stale) {
+        deviceSubscription = createDeviceSubscription({
+          afterSequence: devices.lastEventSequence,
+          eventEpoch: devices.eventEpoch,
+          onGap: refreshDeviceCatalog
+        }).start()
+      }
       reconcilingDevices = false
     }
   }

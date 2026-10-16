@@ -36,8 +36,9 @@ function normalizeStatus(status) {
   return 'offline'
 }
 
-export function createDeviceSubscription({ afterSequence = 0, onGap } = {}) {
+export function createDeviceSubscription({ afterSequence = 0, eventEpoch, onGap } = {}) {
   const devices = useDeviceStore()
+  const epoch = eventEpoch ?? devices.eventEpoch
   const robots = useRobotStore()
   const abilities = useAbilityStore()
   const artifactSync = useArtifactSyncStore()
@@ -51,13 +52,16 @@ export function createDeviceSubscription({ afterSequence = 0, onGap } = {}) {
     if (!event || closed) return
     // 侧栏手动补查也会推进快照游标，后续事件应从这个新基线继续。
     lastSequence = Math.max(lastSequence, devices.lastEventSequence)
-    if (event.type === 'error' && event.code === 'SYNC_FAILED') {
+    if ((event.type === 'error' && event.code === 'SYNC_FAILED') ||
+        (event.event_epoch && event.event_epoch !== epoch)) {
+      api.stop()
       devices.stale = true
-      onGap?.({ error: event, previousSequence: lastSequence })
+      onGap?.({ error: event, previousSequence: lastSequence, resetCursor: true })
       return
     }
     const sequence = Number(event.sequence || 0)
     if (sequence && sequence > lastSequence + 1) {
+      api.stop()
       devices.stale = true
       onGap?.({ event, previousSequence: lastSequence })
       return
@@ -99,7 +103,8 @@ export function createDeviceSubscription({ afterSequence = 0, onGap } = {}) {
       } else {
         const client = createWsClient({
           url: devicesWsUrl(useSessionStore().token),
-          initialAfterSequence: afterSequence
+          initialAfterSequence: afterSequence,
+          initialEventEpoch: epoch
         })
         client.onStatus(updateStatus)
         client.on('*', applyEvent)

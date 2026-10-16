@@ -203,6 +203,7 @@ import DeviceStatus from '@/components/device/DeviceStatus.vue'
 import { useDeviceStore } from '@/stores/device'
 import { useUiStore } from '@/stores/ui'
 import { renderMarkdown } from '@/utils/markdown'
+import { robotSkillStatus } from '@/robot/skillCatalog'
 import 'highlight.js/styles/github-dark.css'
 
 const props = defineProps({
@@ -242,15 +243,7 @@ const installation = (robot) =>
   )
 const operating = (operation, robot) =>
   devices.isOperating(`${operation}:${robot.robot_id}:${props.skill.name}:${props.skill.version}`)
-const installationStatus = (robot) => {
-  const target = desired(robot)
-  const current = installation(robot)
-  if (!target) return current ? 'degraded' : 'not_installed'
-  if (current?.status === 'failed') return 'failed'
-  if (!current || current.enabled !== target.enabled || current.status !== 'installed')
-    return 'pending'
-  return current.enabled ? 'installed' : 'disabled'
-}
+const installationStatus = (robot) => robotSkillStatus(robot, props.skill)
 const desiredLabel = (robot) => {
   const target = desired(robot)
   if (!target) return '未配置'

@@ -20,12 +20,23 @@ limitations under the License.
     <header>
       <div>
         <h2>Robot Skill</h2>
-        <p>显示与当前机器人 Ability 匹配的技能，安装后由 Pilot 回报实际状态。</p>
+        <p>
+          {{ robot.display_name || robot.robot_id }} ·
+          默认显示当前配置、启用版本及异常记录；未启用的历史版本可展开查看。
+        </p>
       </div>
-      <span>目录 revision {{ robot?.skill_catalog_revision || 0 }}</span>
+      <span>目录更新序号 {{ robot?.skill_catalog_revision || 0 }}</span>
     </header>
-    <p v-if="!availableSkills.length" class="debug-hint">
-      暂无与当前机器人 Ability 匹配的 Robot Skill。
+    <el-button size="small" :type="showAll ? 'warning' : 'default'" @click="showAll = !showAll">
+      {{ showAll ? '返回本实例 Skill' : '浏览其他已发布版本' }}
+    </el-button>
+    <p v-if="showAll">正在浏览与当前 Robot Ability 匹配的发布版本。</p>
+    <p v-if="!availableSkills.length">
+      {{
+        showAll
+          ? '暂无与当前机器人 Ability 匹配的 Robot Skill。'
+          : '本实例尚未配置 Skill，可浏览已发布版本进行安装。'
+      }}
     </p>
     <div class="skills-grid">
       <article
@@ -110,6 +121,7 @@ import { useDeviceStore } from '@/stores/device'
 import { useLayoutStore } from '@/stores/layout'
 import { useProjectStore } from '@/stores/project'
 import { useUiStore } from '@/stores/ui'
+import { robotHasSkill, robotSkillStatus, visibleRobotSkills } from '@/robot/skillCatalog'
 
 const props = defineProps({
   initialSkillKey: { type: String, default: '' },
@@ -117,6 +129,14 @@ const props = defineProps({
   inlineDebug: { type: Boolean, default: false }
 })
 const selectedKey = ref('')
+const showAll = ref(false)
+watch(
+  () => props.robot.robot_id,
+  () => {
+    showAll.value = false
+    selectedKey.value = ''
+  }
+)
 watch(
   () => props.initialSkillKey,
   (key) => {
@@ -133,7 +153,14 @@ const devices = useDeviceStore()
 const layout = useLayoutStore()
 const project = useProjectStore()
 const ui = useUiStore()
-const availableSkills = computed(() => installableRobotSkills(devices.skillPackages, props.robot))
+const availableSkills = computed(() => {
+  const compatible = new Set(installableRobotSkills(devices.skillPackages, props.robot))
+  // Keep actual/desired history visible for diagnosis; new install candidates
+  // must satisfy the current Ability action contracts as in upstream.
+  return visibleRobotSkills(devices.skillPackages, props.robot, showAll.value).filter(
+    (skill) => robotHasSkill(props.robot, skill) || compatible.has(skill)
+  )
+})
 const desired = (skill) =>
   props.robot.desired_skills?.find(
     (item) => item.name === skill.name && item.version === skill.version
@@ -146,13 +173,7 @@ const operating = (operation, skill) =>
   devices.isOperating(`${operation}:${props.robot.robot_id}:${skill.name}:${skill.version}`)
 
 function convergenceStatus(skill) {
-  const target = desired(skill)
-  const current = actual(skill)
-  if (!target) return current ? 'degraded' : 'not_installed'
-  if (current?.status === 'failed') return 'failed'
-  if (!current || current.enabled !== target.enabled || current.status !== 'installed')
-    return 'pending'
-  return current.enabled ? 'installed' : 'disabled'
+  return robotSkillStatus(props.robot, skill)
 }
 function desiredLabel(skill) {
   const target = desired(skill)

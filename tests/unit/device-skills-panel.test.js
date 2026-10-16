@@ -52,6 +52,11 @@ it('页面隐藏不兼容技能，切换 Robot 后不残留旧技能调试区', 
   document.body.appendChild(root)
   app.mount(root)
   await nextTick()
+  expect(root.querySelectorAll('article')).toHaveLength(0)
+  ;[...root.querySelectorAll('button')]
+    .find((button) => button.textContent.includes('浏览其他'))
+    .click()
+  await nextTick()
   expect([...root.querySelectorAll('.skill-title b')].map((n) => n.textContent)).toEqual([
     'vla-manipulation'
   ])
@@ -67,6 +72,11 @@ it('页面隐藏不兼容技能，切换 Robot 后不残留旧技能调试区', 
       { selected: true, action_details: [...grasp.required_actions, ...grasp.stop_actions] }
     ]
   }
+  await nextTick()
+  expect(root.querySelectorAll('article')).toHaveLength(0)
+  ;[...root.querySelectorAll('button')]
+    .find((button) => button.textContent.includes('浏览其他'))
+    .click()
   await nextTick()
   expect([...root.querySelectorAll('.skill-title b')].map((n) => n.textContent)).toEqual([
     'grasp-object'

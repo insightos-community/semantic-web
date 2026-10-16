@@ -132,6 +132,29 @@ describe('skills store · 清单加载', () => {
     expect(skillsApi.getSkill).not.toHaveBeenCalled()
   })
 
+  it('switching instances cannot let an older same-name version overwrite the selected detail', async () => {
+    const store = useSkillsStore()
+    store.robotSkills = [
+      { name: 'capture', version: '0.4.0-alpha.1' },
+      { name: 'capture', version: '0.4.0-alpha.2' }
+    ]
+    let resolveOld
+    skillsApi.getRobotSkill.mockImplementation((name, version) =>
+      version.endsWith('.1')
+        ? new Promise((resolve) => {
+            resolveOld = resolve
+          })
+        : Promise.resolve({ skill: { name, version, body: 'simulator' } })
+    )
+    const oldRequest = store.selectCatalog('robot:capture@0.4.0-alpha.1')
+    await store.selectCatalog('robot:capture@0.4.0-alpha.2')
+    resolveOld({ skill: { name: 'capture', version: '0.4.0-alpha.1', body: 'real' } })
+    await oldRequest
+    expect(store.activeVersion).toBe('0.4.0-alpha.2')
+    expect(store.detail.version).toBe('0.4.0-alpha.2')
+    expect(store.detail.body).toBe('simulator')
+  })
+
   it('Robot Skill 详情 404 时真实展示接口错误而不伪造详情', async () => {
     skillsApi.listSkills.mockResolvedValue({ skills: [] })
     skillsApi.listRobotSkills.mockResolvedValue({

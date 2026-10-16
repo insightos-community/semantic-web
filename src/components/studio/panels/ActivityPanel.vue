@@ -55,11 +55,14 @@ limitations under the License.
               :data-subtask-id="subtask.id"
               :aria-current="process.subtask?.id === subtask.id ? 'step' : undefined"
               :aria-label="`${subtask.unassociated ? '执行' : 'SubTask'} · ${subtask.title}`"
-              :title="subtask.title"
+              :title="`${subtask.title} · ${subtaskProgressLabel(subtask)}`"
               @click="selectSubtask(task, subtask)"
             >
               <span class="step-number">{{ index + 1 }}</span>
-              <span class="step-label">{{ subtask.title }}</span>
+              <span class="step-label"
+                >{{ subtask.title
+                }}<small class="step-progress">{{ subtaskProgressLabel(subtask) }}</small></span
+              >
               <DeviceStatus :status="subtask.status" />
             </button>
             <p v-if="!task.subtasks.length" class="empty">等待 SubTask 分解</p>
@@ -130,6 +133,7 @@ import { ref } from 'vue'
 import DeviceStatus from '@/components/device/DeviceStatus.vue'
 import StudioStageTimeline from './StudioStageTimeline.vue'
 import { useExecutionEvidence } from '@/studio/executionEvidence'
+import { subtaskProgressLabel } from '@/studio/subtaskProgress'
 import { useRobotStore } from '@/stores/robot'
 import { useLayoutStore } from '@/stores/layout'
 import { openStudioPanel } from '@/studio/panelService'
@@ -292,6 +296,12 @@ function inspectRun() {
 .subtask-row.selected {
   background: var(--sf-brand-light, var(--sf-bg-hover));
   border-color: var(--sf-brand);
+}
+.step-progress {
+  display: block;
+  color: var(--el-text-color-secondary);
+  font-weight: normal;
+  margin-top: 4px;
 }
 .step-label {
   flex: 1;

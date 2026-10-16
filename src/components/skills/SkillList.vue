@@ -36,7 +36,7 @@ limitations under the License.
         >
           <span class="skill-name">
             {{ sk.name }}
-            <em v-if="sk.skill_kind === 'robot'">Robot</em>
+            <em v-if="sk.skill_kind === 'robot'">v{{ sk.version }}</em>
           </span>
           <span class="skill-desc">{{ sk.description }}</span>
         </button>

@@ -16,11 +16,17 @@ limitations under the License.
 -->
 
 <template>
-  <el-form class="form-renderer" label-position="top" size="small" @submit.prevent="send">
+  <el-form
+    class="form-renderer"
+    label-position="top"
+    size="small"
+    novalidate
+    @submit.prevent="send"
+  >
     <el-form-item
       v-for="field in fields"
       :key="field.name"
-      :label="field.label || field.name"
+      :label="field.label || field.title || field.name"
       :required="field.required"
     >
       <p v-if="field.description" class="field-description">{{ field.description }}</p>
@@ -35,6 +41,8 @@ limitations under the License.
         :disabled="disabled"
         :min="field.minimum"
         :max="field.maximum"
+        :step="field.type === 'integer' ? 1 : 0.01"
+        :step-strictly="false"
       />
       <el-input
         v-else
@@ -53,39 +61,53 @@ limitations under the License.
 <script setup>
 import { computed, reactive, watch } from 'vue'
 import { useInteractionsStore } from '@/stores/interactions'
+import {
+  displayFormField,
+  displayFormValue,
+  formResponse,
+  validFormField
+} from '@/studio/formFields'
 
 const props = defineProps({ interaction: { type: Object, required: true }, disabled: Boolean })
 const emit = defineEmits(['submit'])
 const interactions = useInteractionsStore()
 const schema = computed(() => props.interaction.schema || {})
 const fields = computed(() => {
-  if (Array.isArray(schema.value.fields)) return schema.value.fields
-  return Object.entries(schema.value.properties || {}).map(([name, value]) => ({
-    name,
-    ...value,
-    required: (schema.value.required || []).includes(name)
-  }))
+  if (Array.isArray(schema.value.fields)) return schema.value.fields.map(displayFormField)
+  return Object.entries(schema.value.properties || {})
+    .map(([name, value]) => ({
+      name,
+      ...value,
+      required: (schema.value.required || []).includes(name)
+    }))
+    .map(displayFormField)
 })
 const previous = interactions.drafts[props.interaction.id] || {}
 const values = reactive(
   Object.fromEntries(
     fields.value.map((field) => [
       field.name,
-      previous[field.name] ??
-        props.interaction.initialValue?.[field.name] ??
-        field.default ??
-        (field.type === 'boolean' ? false : field.type === 'number' ? 0 : '')
+      displayFormValue(
+        field,
+        previous[field.name] ??
+          props.interaction.initialValue?.[field.name] ??
+          field.default ??
+          (field.type === 'boolean' ? false : ['number', 'integer'].includes(field.type) ? 0 : '')
+      )
     ])
   )
 )
 const valid = computed(() =>
-  fields.value.every(
-    (field) => !field.required || ![undefined, null, ''].includes(values[field.name])
-  )
+  fields.value.every((field) => validFormField(field, values[field.name]))
 )
-watch(values, (draft) => interactions.setDraft(props.interaction.id, draft), { deep: true })
+// Store canonical units so remounting or restoring an older SI draft converts once.
+watch(
+  values,
+  (draft) => interactions.setDraft(props.interaction.id, formResponse(fields.value, draft)),
+  { deep: true }
+)
 function send() {
-  if (valid.value) emit('submit', { ...values })
+  if (!props.disabled && valid.value) emit('submit', formResponse(fields.value, values))
 }
 </script>
 

@@ -40,30 +40,43 @@ limitations under the License.
         >
         <span class="picker-action">切换⌄</span>
       </button>
-      <el-button size="small" :type="view === 'setup' ? 'primary' : ''" @click="view = 'setup'">
+      <el-button
+        size="small"
+        :type="view === 'real-setup' ? 'primary' : ''"
+        @click="view = 'real-setup'"
+        >接入实机</el-button
+      >
+      <el-button
+        v-if="!realSelected"
+        size="small"
+        :type="view === 'setup' ? 'primary' : ''"
+        @click="view = 'setup'"
+      >
         场景配置
       </el-button>
       <el-button
         size="small"
-        :disabled="!liveAvailable"
+        :disabled="realSelected || !liveAvailable"
         :type="view === 'live' ? 'primary' : ''"
         @click="view = 'live'"
       >
         现场
       </el-button>
-      <el-button size="small" :type="view === 'map' ? 'primary' : ''" @click="view = 'map'">
+      <el-button size="small" :type="view === 'map' ? 'primary' : ''" @click="showMap">
         地图
       </el-button>
       <el-button
         size="small"
-        :disabled="!store.sensors.length"
+        :disabled="realSelected || !store.sensors.length"
         :type="view === 'sensors' ? 'primary' : ''"
         @click="view = 'sensors'"
       >
         传感器
       </el-button>
       <div class="spacer" />
-      <el-button size="small" @click="ui.openSettings('simulation')">运行环境</el-button>
+      <el-button v-if="!realSelected" size="small" @click="ui.openSettings('simulation')"
+        >运行环境</el-button
+      >
     </header>
     <el-dialog
       v-model="scenePickerOpen"
@@ -78,12 +91,23 @@ limitations under the License.
       />
       <p class="picker-note">选择后查看场景配置；当前运行现场保持不变。</p>
     </el-dialog>
-    <div v-if="view !== 'setup' && store.instance" class="running-scene" role="status">
+    <div
+      v-if="!realSelected && view !== 'setup' && view !== 'real-setup' && store.instance"
+      class="running-scene"
+      role="status"
+    >
       <b>当前现场</b>
       <span :title="runningSceneName">{{ runningSceneName }}</span>
       <code>{{ store.instance.scene_key }} · {{ store.instance.layout }}</code>
     </div>
-    <div v-if="store.loading && !liveAvailable" class="scene-preparation-state" role="status">
+    <div v-if="view === 'real-setup' || (view === 'setup' && realSelected)" class="scene-setup">
+      <RealScenePanel
+        :scene="store.realScene || { project_id: store.projectId, name: '实机接入' }"
+        @show-map="showRealMap"
+        @synced="refreshRealScene"
+      />
+    </div>
+    <div v-else-if="store.loading && !liveAvailable" class="scene-preparation-state" role="status">
       正在读取场景与运行环境…
     </div>
     <div
@@ -126,6 +150,8 @@ import {
 } from '@/studio/sceneWorkspace'
 import { useSimulationStore } from '@/stores/simulation'
 import { useUiStore } from '@/stores/ui'
+import { useSemanticMapStore } from '@/stores/semanticMap'
+import RealScenePanel from './RealScenePanel.vue'
 import ProjectSimulationSceneResources from '@/components/studio/ProjectSimulationSceneResources.vue'
 import SceneDetailsPanel from './SceneDetailsPanel.vue'
 import SceneBrowser from '@/components/simulation/SceneBrowser.vue'
@@ -134,24 +160,32 @@ import ScenePreviewImage from '@/components/simulation/ScenePreviewImage.vue'
 const props = defineProps({ panelParams: { type: Object, default: () => ({}) } })
 const store = useSimulationStore()
 const ui = useUiStore()
+const map = useSemanticMapStore()
 const setupSceneId = ref('')
+const realSelected = computed(() =>
+  Boolean(store.realScene && setupSceneId.value === store.realScene.scene_id)
+)
 const scenePickerOpen = ref(false)
-const projectSceneChoices = computed(() =>
-  store.projectScenes.map((item) => ({
+const projectSceneChoices = computed(() => [
+  ...(store.realScene ? [store.realScene] : []),
+  ...store.projectScenes.map((item) => ({
     ...store.catalogById(item.catalog_scene_id),
     scene_id: item.project_scene_id,
     display_id: item.catalog_scene_id
   }))
-)
+])
 const selectedCatalog = computed(() =>
-  store.catalogById(
-    store.projectScenes.find((item) => item.project_scene_id === selectedSceneId.value)
-      ?.catalog_scene_id
-  )
+  realSelected.value
+    ? store.realScene
+    : store.catalogById(
+        store.projectScenes.find((item) => item.project_scene_id === selectedSceneId.value)
+          ?.catalog_scene_id
+      )
 )
 function chooseProjectScene(scene) {
   selectedSceneId.value = scene.scene_id
-  view.value = 'setup'
+  view.value = realSelected.value ? 'map' : 'setup'
+  if (realSelected.value) selectMap('real_map')
   scenePickerOpen.value = false
 }
 const liveAvailable = computed(() => hasLiveScene(store))
@@ -163,7 +197,7 @@ const runningSceneName = computed(
 // 下拉选择其他场景进入配置；返回现场时显示真正运行的场景，不暗中切换物理世界。
 const selectedSceneId = computed({
   get: () =>
-    view.value !== 'setup' && store.instance
+    !realSelected.value && view.value !== 'setup' && view.value !== 'real-setup' && store.instance
       ? runningScene.value?.project_scene_id || ''
       : setupSceneId.value,
   set: (value) => {
@@ -181,20 +215,49 @@ async function reloadPreparation() {
   }
 }
 
+async function refreshRealScene() {
+  try {
+    await store.refreshSceneResources()
+  } catch (error) {
+    store.error = error.message
+  }
+}
+function selectMap(mapId) {
+  if (map.projectId === store.projectId) void map.switchMap(mapId).catch(() => {})
+}
+function showMap() {
+  if (realSelected.value) selectMap('real_map')
+  view.value = 'map'
+}
+function showRealMap() {
+  if (store.realScene) selectedSceneId.value = store.realScene.scene_id
+  selectMap('real_map')
+  view.value = 'map'
+}
+watch([realSelected, () => map.projectId], ([selected]) => {
+  if (selected) {
+    selectMap('real_map')
+    if (view.value !== 'real-setup') view.value = 'map'
+  }
+})
 watch(
   () => props.panelParams.resourceId,
   (requested) => {
-    if (requested && store.projectScenes.some((item) => item.project_scene_id === requested)) {
+    if (
+      requested &&
+      (requested === store.realScene?.scene_id ||
+        store.projectScenes.some((item) => item.project_scene_id === requested))
+    ) {
       selectedSceneId.value = requested
     }
   },
   { immediate: true }
 )
 watch(
-  () => store.projectScenes,
+  () => [store.projectScenes, store.realScene],
   () => {
     selectedSceneId.value = sceneSelectionAfterRefresh(
-      selectedSceneId.value,
+      setupSceneId.value,
       props.panelParams.resourceId,
       store
     )
@@ -206,18 +269,23 @@ watch(
   () => store.catalogSceneId,
   (catalogSceneId) => {
     const active = store.projectScenes.find((item) => item.catalog_scene_id === catalogSceneId)
-    if (active) selectedSceneId.value = active.project_scene_id
+    if (active && !realSelected.value) selectedSceneId.value = active.project_scene_id
   }
 )
 watch(
   () => props.panelParams,
-  ({ viewMode: mode }) => {
-    if (mode) view.value = sceneWorkspaceView(mode, store)
+  ({ viewMode: mode, resourceId }) => {
+    if (['real_map', 'simulation_map'].includes(resourceId)) selectMap(resourceId)
+    view.value = sceneWorkspaceView(mode, {
+      ...store,
+      realScene: realSelected.value ? store.realScene : null
+    })
   },
   { immediate: true }
 )
 // 同一个现场窗口跟随实例生命周期；新一轮启动不会创建新的 Editor。
 watch([() => store.instance?.instance_id, () => liveAvailable.value], ([, available], previous) => {
+  if (realSelected.value || view.value === 'real-setup') return
   if (available && !previous?.[1]) view.value = 'live'
   else if (!available && view.value !== 'map') view.value = 'setup'
 })

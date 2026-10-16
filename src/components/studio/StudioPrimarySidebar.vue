@@ -44,11 +44,7 @@ limitations under the License.
         />
         <section class="sidebar-section project-setup">
           <h3>运行准备</h3>
-          <button
-            class="nav-row"
-            type="button"
-            @click="openEditor('scene-workspace', { viewMode: 'setup' })"
-          >
+          <button class="nav-row" type="button" @click="openEditor('scene-workspace')">
             <Monitor />
             <span
               ><b>场景与 Layout</b><small>{{ projectSceneLabel }}</small></span
@@ -575,8 +571,9 @@ const visibleWorkflows = computed(() =>
   )
 )
 const projectSceneLabel = computed(() => {
+  if (simulation.realScene) return `${simulation.realScene.name} · Real Map`
   const current = runningProjectScene(simulation)
-  // 项目可以包含多个场景；现场存在时侧栏也跟随它，目录第一项只作未运行时的入口。
+  // Preserve the running simulation scene when no real scene is selected.
   if (simulation.instance && !current)
     return `${simulation.instance.scene_key} · ${simulation.instance.layout}`
   const reference = current || simulation.projectScenes[0]
@@ -631,15 +628,13 @@ const selectedRobotId = computed(() =>
   layout.selectedResource?.resourceType === 'robot' ? layout.selectedResource.resourceId : ''
 )
 const projectRobotIds = computed(() => {
-  const ids = new Set(
-    robotExecutions.executions
-      .filter(
-        (execution) => !execution.project_id || execution.project_id === project.currentProjectId
-      )
-      .map((execution) => execution.robot_id)
-  )
+  const ids = new Set()
   for (const robot of devices.robots) {
-    if (robot.project_id === project.currentProjectId) ids.add(robot.robot_id)
+    if (
+      robot.project_id === project.currentProjectId ||
+      robot.project_ids?.includes(project.currentProjectId)
+    )
+      ids.add(robot.robot_id)
   }
   for (const robot of simulation.robots) ids.add(robot.robot_id || robot.id)
   return ids

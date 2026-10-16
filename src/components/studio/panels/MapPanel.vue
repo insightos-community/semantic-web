@@ -39,6 +39,25 @@ limitations under the License.
       </span>
     </header>
 
+    <PilotMapSource
+      :project-id="map.projectId"
+      :active="map.activeMapId === 'real_map'"
+      :twin-available="hasTwinMap(mapLayers)"
+      @display="setCloudDisplay"
+      @synced="map.load('real_map')"
+    />
+
+    <div
+      v-if="robotTwinStatus"
+      class="robot-twin-status"
+      role="status"
+      data-testid="robot-twin-status"
+    >
+      {{ robotTwinStatus }}
+      <button type="button" :disabled="!robotTwinVisible" @click="focusRobot">定位机器人</button>
+      <small>头部、轮组、左夹爪为 URDF 参考位；右夹爪按实测行程映射；地面高度按标注估计。</small>
+    </div>
+
     <el-alert v-if="map.error" :title="map.error" type="warning" :closable="false" show-icon />
 
     <div class="map-toolbar">
@@ -196,16 +215,7 @@ limitations under the License.
             <el-option label="平面" value="plane" />
           </el-select>
           <span v-else class="fixed-kind">区域（半透明平面）</span>
-          <div class="size-row">
-            <label v-for="axis in ['x', 'y', 'z']" :key="'size-' + axis">
-              <span>{{ axis === 'x' ? '宽 X' : axis === 'y' ? '深 Y' : '高 Z' }}</span>
-              <el-input-number
-                v-model="editingEntity.geometry.size[axis]"
-                :min="0.01"
-                :step="0.1"
-              />
-            </label>
-          </div>
+          <MapGeometryDimensions v-model="editingEntity.geometry" />
           <small>创建后会按这里的形状、尺寸和位置显示在 2D/3D 地图中。</small>
         </el-form-item>
         <el-form-item label="标签（可选）">
@@ -272,6 +282,7 @@ limitations under the License.
 </template>
 
 <script setup>
+import MapGeometryDimensions from '@/components/studio/MapGeometryDimensions.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import * as simulationApi from '@/api/simulation'
@@ -295,6 +306,26 @@ import {
   resolveVisualDescriptor
 } from '@/studio/visualAssets'
 
+import PilotMapSource from '../PilotMapSource.vue'
+import { RobotTwinLayer } from '@/studio/robotTwin'
+import request from '@/api/request'
+import {
+  mapViewStorageKey,
+  readMapView,
+  saveMapView,
+  restoreMapCamera,
+  resizeMapCamera
+} from '@/studio/mapViewState'
+
+import { robotMapCloudPositions } from '@/studio/robotMapCloud'
+import {
+  pilotVisualDescriptor,
+  hasTwinMap,
+  fitPilotVisual,
+  positionTwinCamera,
+  stylePilotEntity
+} from '@/studio/pilotMapVisuals'
+
 const props = defineProps({ panelParams: { type: Object, default: () => ({}) } })
 const map = useSemanticMapStore()
 const simulation = useSimulationStore()
@@ -312,6 +343,9 @@ const showRelationEditor = ref(false)
 const relationDraft = reactive({ subject_id: '', predicate: '', object_id: '' })
 const editingRelationId = ref('')
 const editingLabels = ref('')
+const robotTwinStatus = ref('')
+const robotTwinVisible = ref(false)
+let robotTwin = null
 let three = null
 let scene = null
 let camera = null
@@ -345,7 +379,12 @@ const selectionModes = [
 const activeLabel = computed(
   () => mapKinds.find((item) => item.id === map.activeMapId)?.label || map.activeMapId
 )
-const activeEntities = computed(() => map.entities.filter((item) => item.status !== 'removed'))
+const mapLayers = computed(() =>
+  map.entities.filter((item) => item.status !== 'removed' && item.type === 'map_layer')
+)
+const activeEntities = computed(() =>
+  map.entities.filter((item) => item.status !== 'removed' && item.type !== 'map_layer')
+)
 const selectedEntity = computed(() =>
   ['entity', 'region'].includes(map.selection?.kind)
     ? map.entityById(map.selection.entity_id)
@@ -551,7 +590,8 @@ async function initThree() {
   ])
   scene = new three.Scene()
   scene.background = new three.Color(0xf6f7fb)
-  setViewMode(viewMode.value)
+  prepareMapView()
+  setViewMode(viewMode.value, false)
   renderer = new three.WebGLRenderer({ antialias: true })
   renderer.outputColorSpace = three.SRGBColorSpace
   renderer.toneMapping = three.ACESFilmicToneMapping
@@ -575,10 +615,22 @@ async function initThree() {
   const directional = new three.DirectionalLight(0xffffff, 1.35)
   directional.position.set(4, 8, 5)
   scene.add(directional)
+  robotTwin = new RobotTwinLayer({
+    THREE: three,
+    scene,
+    request,
+    loadVisual: loadVisualAsset,
+    status: (value) => {
+      robotTwinStatus.value = value
+      robotTwinVisible.value = !!robotTwin?.root?.visible
+    },
+    visible: () => !document.hidden && !!canvasHost.value?.getClientRects().length
+  })
   resizeThree()
   rebuildScene()
   renderLoop = createRenderLoop(() => {
     controls?.update()
+    robotTwin?.frame()
     renderer?.render(scene, camera)
   })
   renderLoop.start()
@@ -588,9 +640,47 @@ async function initThree() {
 function defaultMapTarget(mode = viewMode.value) {
   return mode === '2d' ? new three.Vector3(0, 0, 0) : new three.Vector3(0, 0.8, 0)
 }
-hasManualNavigation = false
-
-function setViewMode(nextMode) {
+// BEGIN persistent-map-view: shared with the preserved-renderer release overlay.
+let currentViewKey = ''
+let savedView = null
+let viewSaveTimer = null
+let rememberViewChanges = false
+let viewCameraEpoch = 0
+function persistMapView() {
+  clearTimeout(viewSaveTimer)
+  if (!rememberViewChanges) return
+  savedView = saveMapView(currentViewKey, viewMode.value, camera, controls) || savedView
+}
+function scheduleMapViewSave() {
+  if (!rememberViewChanges) return
+  clearTimeout(viewSaveTimer)
+  viewSaveTimer = setTimeout(persistMapView, 200)
+}
+function prepareMapView() {
+  const nextKey = mapViewStorageKey(map.projectId, map.activeMapId, map.activeSnapshot)
+  if (nextKey === currentViewKey) {
+    if (
+      !savedView &&
+      !rememberViewChanges &&
+      !hasManualNavigation &&
+      renderer &&
+      hasTwinMap(mapLayers.value) &&
+      viewMode.value !== '3d'
+    )
+      setViewMode('3d', false)
+    return
+  }
+  persistMapView()
+  currentViewKey = nextKey
+  savedView = readMapView(currentViewKey)
+  rememberViewChanges = false
+  const nextMode = savedView?.mode || (hasTwinMap(mapLayers.value) ? '3d' : '2d')
+  if (renderer) setViewMode(nextMode, false)
+  else viewMode.value = nextMode
+}
+function setViewMode(nextMode, remember = true) {
+  if (remember) persistMapView()
+  rememberViewChanges = false
   viewMode.value = nextMode
   hasManualNavigation = false
   if (!three) return
@@ -600,23 +690,35 @@ function setViewMode(nextMode) {
     camera.up.set(0, 0, -1)
   } else {
     camera = new three.PerspectiveCamera(48, 1, 0.1, 100)
-    // 默认从一个水平基准方向观察，不再用俯视斜角干扰左右和朝向判断。
-    // 用户仍可平移、旋转和缩放。
     camera.position.set(0, 1.6, 8)
     camera.up.set(0, 1, 0)
   }
-  requestAnimationFrame(() => fitViewToEntities(true))
-  camera.lookAt(defaultMapTarget(nextMode))
+  // Set the saved up axis before constructing MapControls (its orbit basis).
+  hasManualNavigation = restoreMapCamera(camera, savedView?.views[nextMode])
+  if (!hasManualNavigation) camera.lookAt(defaultMapTarget(nextMode))
   configureControls()
   resizeThree()
+  const epoch = ++viewCameraEpoch
+  requestAnimationFrame(() => {
+    if (epoch !== viewCameraEpoch || !camera) return
+    fitViewToEntities(false)
+    if (remember) {
+      rememberViewChanges = true
+      persistMapView()
+    }
+  })
 }
+// END persistent-map-view
 function configureControls() {
   if (!MapControls || !renderer || !camera) return
   controls?.dispose()
   controls = new MapControls(camera, renderer.domElement)
   controls.addEventListener('start', () => {
     hasManualNavigation = true
+    rememberViewChanges = true
   })
+  controls.addEventListener('change', scheduleMapViewSave)
+  controls.addEventListener('end', persistMapView)
   controls.enableDamping = true
   controls.dampingFactor = 0.08
   // MapControls 的地图语义与 2D 保持一致：左键平移，Ctrl/Meta/Shift+左键
@@ -627,19 +729,35 @@ function configureControls() {
   controls.minZoom = 0.25
   controls.maxZoom = 8
   controls.target.copy(defaultMapTarget())
+  if (hasManualNavigation && savedView?.views[viewMode.value]) {
+    controls.target.fromArray(savedView.views[viewMode.value].target)
+  }
   controls.update()
   controls.saveState()
 }
 function resetView() {
   if (!camera || !controls) return
+  rememberViewChanges = false
   hasManualNavigation = false
+  camera.zoom = 1
+  configureControls()
   if (!fitViewToEntities(true)) {
     controls.reset()
     controls.target.copy(defaultMapTarget())
     controls.update()
   }
+  hasManualNavigation = true
+  rememberViewChanges = true
+  persistMapView()
 }
-function fitViewToEntities(force = false) {
+function focusRobot() {
+  if (!robotTwin?.root?.visible) return
+  if (fitViewToEntities(true, [robotTwin.root])) {
+    hasManualNavigation = true
+    persistMapView()
+  }
+}
+function fitViewToEntities(force = false, objects = entityObjects.values()) {
   if (!three || !camera || !controls || (!force && hasManualNavigation)) return false
   if (applyInitialSceneView(three, runtimeVisualRoot, camera, controls)) {
     controls.saveState()
@@ -647,7 +765,7 @@ function fitViewToEntities(force = false) {
   }
   const bounds = new three.Box3()
   let hasContent = false
-  for (const object of entityObjects.values()) {
+  for (const object of objects) {
     if (!object?.visible) continue
     object.updateWorldMatrix(true, true)
     const objectBounds = new three.Box3().setFromObject(object)
@@ -683,6 +801,7 @@ function fitViewToEntities(force = false) {
     camera.near = Math.max(0.01, distance / 1000)
     camera.far = Math.max(100, distance * 10)
   }
+  positionTwinCamera(three, camera, center, camera.position.distanceTo(center), mapLayers.value)
   camera.lookAt(center)
   camera.updateProjectionMatrix()
   controls.update()
@@ -695,15 +814,7 @@ function resizeThree() {
   const height = Math.max(1, canvasHost.value.clientHeight)
   renderer.setSize(width, height, false)
   const aspect = width / height
-  if (camera.isOrthographicCamera) {
-    camera.left = -6 * aspect
-    camera.right = 6 * aspect
-    camera.top = 6
-    camera.bottom = -6
-  } else {
-    camera.aspect = aspect
-  }
-  camera.updateProjectionMatrix()
+  resizeMapCamera(camera, aspect)
 }
 function geometryFor(entity) {
   const size = entity.geometry?.size || { x: 0.4, y: 0.4, z: 0.4 }
@@ -757,8 +868,22 @@ function updateSelectionOutline() {
   scene.add(selectionOutline)
   if (canvasHost.value) canvasHost.value.dataset.selectedEntityId = entityId
 }
+let showCloud = false
+function setCloudDisplay(value) {
+  showCloud = value
+  for (const object of entityObjects.values()) {
+    if (object.userData.mapBackground) object.visible = !hasTwinMap(mapLayers.value) || showCloud
+  }
+  if (canvasHost.value) canvasHost.value.dataset.pointCloudVisible = String(showCloud)
+}
 function rebuildScene() {
   if (!scene || !three) return
+  prepareMapView()
+  robotTwin?.setContext(
+    map.projectId,
+    mapLayers.value.find((e) => e.type === 'map_layer'),
+    map.activeMapId === 'real_map' && !map.activeSnapshot?.read_only
+  )
   const epoch = ++visualLoadEpoch
   clearSelectionOutline()
   if (runtimeVisualRoot) {
@@ -778,7 +903,22 @@ function rebuildScene() {
     }
     entityObjects.clear()
   }
-  for (const entity of activeEntities.value) {
+  for (const entity of [...mapLayers.value, ...activeEntities.value]) {
+    const cloudPositions = robotMapCloudPositions(entity)
+    if (cloudPositions) {
+      const geometry = new three.BufferGeometry()
+      geometry.setAttribute('position', new three.BufferAttribute(cloudPositions, 3))
+      const cloud = new three.Points(
+        geometry,
+        new three.PointsMaterial({ color: 0x8594a8, size: 0.035, sizeAttenuation: true })
+      )
+      cloud.visible = !hasTwinMap(mapLayers.value) || showCloud
+      cloud.userData.mapBackground = true
+      cloud.userData.visualFallback = false
+      scene.add(cloud)
+      entityObjects.set(entity.id, cloud)
+      continue
+    }
     const color = entity.geometry?.kind === 'region' ? 0x6f7ee8 : 0x3d6bd9
     const mesh = new three.Mesh(
       geometryFor(entity),
@@ -791,6 +931,7 @@ function rebuildScene() {
     const position = entity.pose?.position || {}
     mesh.position.copy(toThreePosition(position))
     mesh.quaternion.copy(toThreeQuaternion(entity.pose?.orientation))
+    stylePilotEntity(mesh, entity)
     mesh.userData.entityId = entity.id
     mesh.userData.visualFallback = true
     scene.add(mesh)
@@ -801,21 +942,24 @@ function rebuildScene() {
         entry.asset?.metadata?.model === entity.type ||
         entry.asset?.metadata?.category === entity.type
     )
-    const descriptor = resolveVisualDescriptor(
-      simulation.assetCatalog,
-      entity.visual_ref || entity.properties?.visual_ref,
-      fallback
-    )
+    const descriptor =
+      pilotVisualDescriptor(entity) ||
+      resolveVisualDescriptor(
+        simulation.assetCatalog,
+        entity.visual_ref || entity.properties?.visual_ref,
+        fallback
+      )
     const size = entity.geometry?.size || { x: 0.4, y: 0.4, z: 0.4 }
     void loadVisualAsset(descriptor, 'map')
       .then((visual) => {
         if (!visual || entityObjects.get(entity.id) !== mesh) return
-        fitVisualToDescriptor(three, visual, descriptor, [size.x, size.y, size.z], {
-          targetSize: [size.x, size.y, size.z],
-          // 地图 Entity 位姿来自 Runtime 中心位姿，不能再次按底面偏移。
-          placeAtAnchor: false,
-          centerAtOrigin: Boolean(entity.bounds?.size)
-        })
+        if (!fitPilotVisual(three, visual, descriptor, [size.x, size.y, size.z]))
+          fitVisualToDescriptor(three, visual, descriptor, [size.x, size.y, size.z], {
+            targetSize: [size.x, size.y, size.z],
+            // 地图 Entity 位姿来自 Runtime 中心位姿，不能再次按底面偏移。
+            placeAtAnchor: false,
+            centerAtOrigin: Boolean(entity.bounds?.size)
+          })
         mesh.add(visual)
         mesh.material.visible = false
         visual.updateWorldMatrix(true, true)
@@ -971,7 +1115,10 @@ function pickFromCanvas(event) {
   // 真实 GLB 会作为实体根 Mesh 的多层子节点挂载。Three.js 的射线检测默认不
   // 递归，且命中的通常是 GLB 子 Mesh；因此必须递归拾取并向父节点回溯公共
   // entityId。这里绝不能依赖 glTF node/mesh 名称，它们只是视觉资产内部标识。
-  const hit = raycaster.intersectObjects([...entityObjects.values()], true)[0]
+  const hit = raycaster.intersectObjects(
+    [...entityObjects.values()].filter((object) => !object.userData.mapBackground),
+    true
+  )[0]
   let selectedObject = hit?.object || null
   while (selectedObject && !selectedObject.userData?.entityId) {
     selectedObject = selectedObject.parent
@@ -1000,6 +1147,8 @@ function cancelCanvasPointer() {
   canvasPointerStart = null
 }
 function disposeThree() {
+  robotTwin?.clear()
+  robotTwin = null
   ++visualLoadEpoch
   controls?.dispose()
   controls = null
@@ -1028,6 +1177,7 @@ function disposeThree() {
 
 watch(
   () => [
+    map.projectId,
     map.activeMapId,
     map.activeSnapshot?.generation,
     map.activeSnapshot?.revision,
@@ -1044,6 +1194,7 @@ watch(
   () => updateSelectionOutline()
 )
 onMounted(async () => {
+  window.addEventListener('pagehide', persistMapView)
   if (!map.activeSnapshot) {
     try {
       await map.load()
@@ -1058,12 +1209,40 @@ onMounted(async () => {
   }
 })
 onBeforeUnmount(() => {
+  persistMapView()
+  window.removeEventListener('pagehide', persistMapView)
+  ++viewCameraEpoch
   clearSelectionOutline()
   disposeThree()
 })
 </script>
 
 <style scoped lang="scss">
+.robot-twin-status {
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--sf-text-secondary);
+  border-bottom: 1px solid var(--sf-border-light);
+}
+.robot-twin-status button {
+  margin-left: 8px;
+  padding: 3px 8px;
+  border: 1px solid var(--sf-border-light);
+  border-radius: 6px;
+  background: var(--sf-bg-secondary);
+  color: var(--sf-brand);
+  cursor: pointer;
+}
+.robot-twin-status button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.robot-twin-status small {
+  display: block;
+  font-size: 10px;
+  color: var(--sf-text-disabled);
+}
+
 .map-panel {
   display: flex;
   height: 100%;

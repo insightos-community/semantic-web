@@ -18,7 +18,8 @@ import {
   hasLiveScene,
   sceneWorkspaceView,
   runningProjectScene,
-  sceneSelectionAfterRefresh
+  sceneSelectionAfterRefresh,
+  selectWorkspaceScene
 } from '@/studio/sceneWorkspace'
 
 it('预览刷新保留 radio 选择，不回到窗口最初的 composting 场景', () => {
@@ -55,6 +56,21 @@ const live = () => ({
 })
 
 describe('场景工作页按实际现场恢复', () => {
+  it('已连接 Pilot 默认实机场景和地图，保留明确的配置/仿真场景选择', () => {
+    const store = {
+      ...live(),
+      realScene: { scene_id: 'real-scene:project' },
+      projectScenes: [{ project_scene_id: 'sim', catalog_scene_id: 'kitchen' }]
+    }
+    expect(selectWorkspaceScene(store)).toBe('real-scene:project')
+    expect(sceneWorkspaceView(undefined, store)).toBe('map')
+    expect(sceneWorkspaceView('setup', store)).toBe('setup')
+    expect(selectWorkspaceScene(store, 'sim')).toBe('sim')
+    expect(selectWorkspaceScene(store, '', 'sim')).toBe('sim')
+    expect(selectWorkspaceScene(store, '', 'deleted')).toBe('real-scene:project')
+    expect(selectWorkspaceScene({ ...store, realScene: null })).toBe('sim')
+    expect(selectWorkspaceScene({ projectScenes: [] })).toBe('')
+  })
   it('有效现场恢复到现场，暂停也可以查看', () => {
     expect(sceneWorkspaceView(undefined, live())).toBe('live')
     expect(hasLiveScene({ ...live(), instance: { ...live().instance, state: 'paused' } })).toBe(

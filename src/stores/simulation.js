@@ -89,6 +89,7 @@ export const useSimulationStore = defineStore('simulation', {
     selectedRuntimeProfileId: '',
     sceneCatalog: [],
     projectScenes: [],
+    realScene: null,
     catalogSceneId: '',
     sceneVersion: '',
     variantId: '',
@@ -174,6 +175,7 @@ export const useSimulationStore = defineStore('simulation', {
         selectedRuntimeProfileId: '',
         sceneCatalog: [],
         projectScenes: [],
+        realScene: null,
         catalogSceneId: '',
         sceneVersion: '',
         variantId: '',
@@ -299,6 +301,7 @@ export const useSimulationStore = defineStore('simulation', {
         this.applyRuntimeInstallationObservation(snapshotResponse.simulation?.runtime_installation)
         this.sceneCatalog = catalogResponse.scenes || []
         this.projectScenes = projectScenesResponse.project_scenes || []
+        this.realScene = projectScenesResponse.real_scene || null
         if (
           !this.runtimeProfiles.some(
             (item) => item.runtime_profile_id === this.selectedRuntimeProfileId
@@ -1032,6 +1035,7 @@ export const useSimulationStore = defineStore('simulation', {
       this.documents = documentResponse.documents || []
       this.sceneCatalog = catalogResponse.scenes || projectScenesResponse.catalog_scenes || []
       this.projectScenes = projectScenesResponse.project_scenes || []
+      this.realScene = projectScenesResponse.real_scene || null
       this.runtimePreference = {
         runtime_profile_id: preferenceResponse.runtime_profile_id || '',
         preferred_runtime_installation_id:

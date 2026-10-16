@@ -126,6 +126,24 @@ describe('simulation store', () => {
     expect(store.variantId).toBe('init-2')
     expect(store.sceneVersion).toBe('1.0.0')
   })
+
+  it('loads the default real scene without starting a runtime and clears it between projects', async () => {
+    const scene = { scene_id: 'real-scene:project-1', project_id: 'project-1', map_id: 'real_map' }
+    api.listProjectScenes.mockResolvedValue({ project_scenes: [], real_scene: scene })
+    const store = useSimulationStore()
+    await store.hydrate('project-1')
+    expect(store.realScene).toEqual(scene)
+    expect(api.ensureProjectRuntime).not.toHaveBeenCalled()
+    expect(api.startProjectScene).not.toHaveBeenCalled()
+    api.listProjectScenes.mockResolvedValue({
+      project_scenes: [],
+      real_scene: { ...scene, pilot_id: 'new' }
+    })
+    await store.refreshSceneResources()
+    expect(store.realScene.pilot_id).toBe('new')
+    store.resetForProject('project-2')
+    expect(store.realScene).toBeNull()
+  })
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()

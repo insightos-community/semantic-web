@@ -53,11 +53,34 @@ const REASON_COPY = Object.freeze({
   robot_agent_decision_failed: {
     title: '机器人决策失败',
     activity: 'Robot Agent 没有给出可用的类型化决策。可以重试决策，或停止当前 Workflow。'
+  },
+  recovery_running: {
+    title: '正在重新编排',
+    activity: 'Agent 正在读取失败证据并调整未完成步骤，已完成步骤保留。'
+  },
+  recovery_exhausted: {
+    title: '恢复决策未完成',
+    activity: '恢复 Agent 未给出可用决策。处理原因后可重试恢复决策；不会直接重放失败动作。'
   }
 })
 
 function normalizedReason(task = {}, workflow = {}) {
-  return String(task.reason || (task.status === 'paused' ? workflow.reason : '') || '').trim()
+  return String(
+    task.reason || task.waiting_reason || (task.status === 'paused' ? workflow.reason : '') || ''
+  ).trim()
+}
+
+export function canResumeWorkflow(workflow = {}, tasks = []) {
+  return (
+    workflow.status === 'paused' &&
+    ['user_paused', 'server_restarted'].includes(workflow.reason) &&
+    !tasks.some(
+      (task) =>
+        task.status === 'paused' &&
+        normalizedReason(task) !== 'server_restarted' &&
+        !(workflow.reason === 'user_paused' && normalizedReason(task) === 'waiting_input')
+    )
+  )
 }
 
 export function interactionForTask(records = [], task = {}, workflow = {}) {
@@ -103,12 +126,23 @@ export function deriveTaskWaitingView(task = {}, { workflow = {}, interaction = 
   else actions.push({ id: 'inspect', label: '查看 Task', kind: 'default' })
   if (
     !interaction &&
-    ['user_paused', 'server_restarted'].includes(reason) &&
-    workflow.status === 'paused'
+    (['user_paused', 'server_restarted'].includes(reason) ||
+      (reason === 'waiting_input' && workflow.reason === 'user_paused')) &&
+    canResumeWorkflow(workflow, [task])
   )
     actions.push({ id: 'resume', label: '继续 Workflow', kind: 'primary' })
   if (!interaction && reason === 'robot_agent_decision_failed' && workflow.status === 'paused')
     actions.push({ id: 'retry-decision', label: '重试决策', kind: 'primary' })
+  if (
+    !interaction &&
+    (reason === 'recovery_exhausted' ||
+      (workflow.status === 'paused' &&
+        ['recovery_running', 'robot_execution_failed'].includes(reason))) &&
+    (workflow.status === 'running' ||
+      (workflow.status === 'paused' &&
+        ['server_restarted', 'user_paused'].includes(workflow.reason)))
+  )
+    actions.push({ id: 'retry-decision', label: '重试恢复决策', kind: 'primary' })
   if (!interaction && reason === 'execution_state_unknown' && workflow.status === 'paused')
     actions.push({ id: 'confirm-stop', label: '确认现场安全并终结', kind: 'warning' })
   return {

@@ -260,7 +260,11 @@ import RobotSkillDebugPanel from '@/components/device/RobotSkillDebugPanel.vue'
 import RobotStageInspector from '@/components/studio/RobotStageInspector.vue'
 import TaskWaitingCard from '@/components/studio/TaskWaitingCard.vue'
 import { parseRobotStageResourceId } from '@/devices/stageSelection'
-import { deriveTaskWaitingView, interactionForTask } from '@/studio/taskWaitingView'
+import {
+  canResumeWorkflow as workflowCanResume,
+  deriveTaskWaitingView,
+  interactionForTask
+} from '@/studio/taskWaitingView'
 import { confirmWorkflowStop } from '@/studio/confirmWorkflowStop'
 
 defineProps({ embedded: { type: Boolean, default: false } })
@@ -391,10 +395,8 @@ const workflowProgress = computed(() => {
       100
   )
 })
-const canResumeWorkflow = computed(
-  () =>
-    inspectedWorkflow.value?.status === 'paused' &&
-    ['user_paused', 'server_restarted'].includes(inspectedWorkflow.value.reason)
+const canResumeWorkflow = computed(() =>
+  workflowCanResume(inspectedWorkflow.value || {}, inspectedTasks.value)
 )
 const canRetryRobotDecision = computed(
   () =>

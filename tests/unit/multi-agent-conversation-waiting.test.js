@@ -16,9 +16,35 @@
 import { describe, expect, it } from 'vitest'
 import { fromRest } from '@/stores/chatModel'
 import { normalizeInteraction } from '@/stores/interactions'
-import { deriveTaskWaitingView, interactionForTask } from '@/studio/taskWaitingView'
+import {
+  canResumeWorkflow,
+  deriveTaskWaitingView,
+  interactionForTask
+} from '@/studio/taskWaitingView'
 
 describe('多 Agent Conversation 与 Waiting View', () => {
+  it('服务重启后的未执行准备可以恢复，已失败动作走独立恢复决策', () => {
+    for (const reason of ['server_restarted', 'user_paused']) {
+      const workflow = { status: 'paused', reason }
+      const task = { status: 'paused', waiting_reason: 'server_restarted' }
+      expect(canResumeWorkflow(workflow, [task])).toBe(true)
+      expect(deriveTaskWaitingView(task, { workflow }).actions.map((a) => a.id)).toContain('resume')
+      for (const waiting_reason of ['recovery_running', 'robot_execution_failed']) {
+        const failed = { status: 'paused', waiting_reason }
+        expect(canResumeWorkflow(workflow, [failed])).toBe(false)
+        expect(deriveTaskWaitingView(failed, { workflow }).actions.map((a) => a.id)).toEqual([
+          'inspect',
+          'retry-decision'
+        ])
+        expect(
+          deriveTaskWaitingView(failed, { workflow: { status: 'running' } }).actions.map(
+            (a) => a.id
+          )
+        ).toEqual(['inspect'])
+      }
+    }
+  })
+
   it('REST恢复保留真实Agent身份，并将Workflow活动与模型发言分离', () => {
     const activity = fromRest({
       id: 'msg-activity',
@@ -103,16 +129,55 @@ describe('多 Agent Conversation 与 Waiting View', () => {
     expect(waitingInput.actions.map((item) => item.id)).toEqual(['answer'])
 
     const userPaused = deriveTaskWaitingView(
-      { id: 'task-2', status: 'paused', reason: 'user_paused' },
-      { workflow }
+      { id: 'task-2', status: 'started', reason: 'waiting_resource' },
+      { workflow: { ...workflow, reason: 'user_paused' } }
     )
-    expect(userPaused.actions.map((item) => item.id)).toEqual(['inspect', 'resume'])
+    expect(userPaused.actions.map((item) => item.id)).toEqual(['inspect'])
+    expect(
+      canResumeWorkflow({ ...workflow, reason: 'user_paused' }, [
+        { id: 'task-2', status: 'started' }
+      ])
+    ).toBe(true)
+
+    const answeredWhilePaused = deriveTaskWaitingView(
+      { id: 'task-answer', status: 'paused', reason: 'waiting_input' },
+      { workflow: { ...workflow, reason: 'user_paused' } }
+    )
+    expect(answeredWhilePaused.actions.map((item) => item.id)).toEqual(['inspect', 'resume'])
 
     const decisionFailed = deriveTaskWaitingView(
       { id: 'task-3', status: 'paused', reason: 'robot_agent_decision_failed' },
       { workflow: { id: 'workflow-1', status: 'paused', reason: 'robot_agent_decision_failed' } }
     )
     expect(decisionFailed.actions.map((item) => item.id)).toEqual(['inspect', 'retry-decision'])
+
+    const recoveryFailed = deriveTaskWaitingView(
+      { id: 'task-3', status: 'paused', waiting_reason: 'recovery_exhausted' },
+      { workflow: { id: 'workflow-1', status: 'running' } }
+    )
+    expect(recoveryFailed.title).toBe('恢复决策未完成')
+    expect(recoveryFailed.actions).toContainEqual({
+      id: 'retry-decision',
+      label: '重试恢复决策',
+      kind: 'primary'
+    })
+    expect(recoveryFailed.activity).toContain('不会直接重放失败动作')
+    const pausedRecovery = deriveTaskWaitingView(
+      { id: 'task-3', status: 'paused', reason: 'recovery_exhausted' },
+      { workflow: { id: 'workflow-1', status: 'paused', reason: 'user_paused' } }
+    )
+    expect(pausedRecovery.actions.map((item) => item.id)).toEqual(['inspect', 'retry-decision'])
+    expect(
+      canResumeWorkflow({ ...workflow, reason: 'user_paused' }, [
+        { id: 'task-3', status: 'paused', waiting_reason: 'recovery_exhausted' }
+      ])
+    ).toBe(false)
+    expect(
+      deriveTaskWaitingView(
+        { id: 'task-3', status: 'paused', waiting_reason: 'recovery_exhausted' },
+        { workflow: { ...workflow, status: 'stopped', reason: 'user_stopped' } }
+      ).actions.map((item) => item.id)
+    ).toEqual(['inspect'])
 
     const unknown = deriveTaskWaitingView(
       { id: 'task-4', status: 'paused', reason: 'execution_state_unknown' },

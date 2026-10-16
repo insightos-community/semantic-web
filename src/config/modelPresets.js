@@ -32,10 +32,10 @@ export const MODEL_PROVIDER_PRESETS = [
     label: 'DeepSeek',
     shortLabel: 'DeepSeek',
     baseUrl: 'https://api.deepseek.com/v1',
-    models: ['deepseek-v4-pro', 'deepseek-v4-flash'],
+    models: ['deepseek-v4-pro', 'deepseek-flash'],
     visionModels: [],
-    reasoningModels: ['deepseek-v4-pro', 'deepseek-v4-flash'],
-    note: '使用当前 V4 模型标识；同一模型可通过 reasoning_effort 调整思考深度。'
+    reasoningModels: ['deepseek-v4-pro', 'deepseek-flash'],
+    note: 'V4.1 Flash 的 API 标识为 deepseek-flash；V4 Pro 使用 deepseek-v4-pro。可通过 reasoning_effort 调整思考深度。'
   },
   {
     id: 'qwen',

@@ -207,12 +207,13 @@ function hydrateRelated(snapshot) {
     abilities.hydrateRobot(robot.robot_id, robot.abilities || [])
 }
 
-async function reload() {
+async function reload({ resetCursor = false } = {}) {
   if (reconciling) return
   reconciling = true
   subscription?.stop()
   try {
-    const snapshot = await devices.loadSnapshot()
+    const snapshot = await devices.loadSnapshot({ resetCursor })
+    if (!snapshot) return
     hydrateRelated(snapshot)
     subscription = createDeviceSubscription({
       afterSequence: devices.lastEventSequence,

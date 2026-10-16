@@ -642,6 +642,33 @@ describe('Studio 运行证据', () => {
     expect(evidence.problems.value[0].details.attrs.error).toBe('deadline exceeded')
   })
 
+  it('补查纠正旧 running Run，终态 Trace 不再轮询，手动刷新仍可补查', async () => {
+    const robots = useRobotStore()
+    robots.hydrate('p1', [{ ...execution, run_id: 'task-run' }])
+    const stale = { id:'task-run', project_id:'p1', status:'running', trace_id:'trace1', revision:1 }
+    useRunsStore().hydrate('p1', [stale])
+    useExecutionScopeStore().inspectExecution('rex-1')
+    const evidence = scope.run(createExecutionEvidence)
+    getRun.mockResolvedValue({run:{...stale,status:'completed',revision:2}})
+    getSpans.mockResolvedValue({spans:[]})
+    await robots.loadRunTrace(stale)
+    expect(evidence.runs.value[0].status).toBe('completed')
+    await robots.loadRunTrace(stale)
+    await robots.loadRunTrace(evidence.runs.value[0])
+    expect(getRun).toHaveBeenCalledTimes(1)
+    expect(getSpans).toHaveBeenCalledTimes(1)
+    await robots.loadRunTrace(evidence.runs.value[0], {force:true})
+    expect(getSpans).toHaveBeenCalledTimes(2)
+  })
+
+  it('目录摘要不清除已经加载的规划输入和执行结果', () => {
+    const robots = useRobotStore()
+    robots.upsert({...execution, input:{plan:[1,2]}, result:{ok:true}})
+    robots.upsert({...execution, revision:2, status:'completed', details_included:false, input:null})
+    expect(robots.byId(execution.id).input).toEqual({plan:[1,2]})
+    expect(robots.byId(execution.id).result).toEqual({ok:true})
+  })
+
   it('单文件导出包含真实证据本体、原始记录和读取失败说明', async () => {
     getArtifact.mockImplementation(async (id) => {
       if (id === 'missing') throw new Error('同步文件不存在')

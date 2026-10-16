@@ -159,12 +159,13 @@ function hydrate(snapshot) {
     abilities.hydrateRobot(item.robot_id, item.abilities || [])
 }
 
-async function reload() {
+async function reload({ resetCursor = false } = {}) {
   if (reconciling) return
   reconciling = true
   subscription?.stop()
   try {
-    const snapshot = await devices.loadSnapshot()
+    const snapshot = await devices.loadSnapshot({ resetCursor })
+    if (!snapshot) return
     hydrate(snapshot)
     const detail = await devices.loadDevice(robotId.value)
     robots.mergeExecutions(detail?.executions || [])

@@ -152,7 +152,7 @@ function selectHistory(value) {
 async function refresh() {
   await Promise.allSettled([
     ...executions.value.map((item) => robots.loadDetail(item.id)),
-    ...evidence.runs.value.map((item) => robots.loadRunTrace(item)),
+    ...evidence.runs.value.map((item) => robots.loadRunTrace(item, { force: true })),
     ...(workflowId.value ? [workflow.loadView(workflowId.value, { refresh: true })] : [])
   ])
 }

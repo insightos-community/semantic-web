@@ -63,6 +63,7 @@ export const useDeviceStore = defineStore('devices', {
     connectionStatus: 'offline',
     stale: false,
     lastEventSequence: 0,
+    eventEpoch: '',
     lastSnapshotAt: '',
     error: '',
     operationKeys: []
@@ -84,7 +85,7 @@ export const useDeviceStore = defineStore('devices', {
     isOperating: (state) => (key) => state.operationKeys.includes(key)
   },
   actions: {
-    async loadSnapshot({ shouldApply = () => true } = {}) {
+    async loadSnapshot({ shouldApply = () => true, resetCursor = false } = {}) {
       const request = {}
       snapshotRequests.set(this, request)
       const current = () => snapshotRequests.get(this) === request && shouldApply()
@@ -93,8 +94,7 @@ export const useDeviceStore = defineStore('devices', {
       try {
         const snapshot = await devicesApi.getDeviceSnapshot()
         if (!current()) return null
-        this.hydrate(snapshot)
-        return snapshot
+        return this.hydrate(snapshot, { resetCursor }) ? snapshot : null
       } catch (error) {
         if (!current()) return null
         this.snapshotStatus = 'error'
@@ -102,10 +102,13 @@ export const useDeviceStore = defineStore('devices', {
         throw error
       }
     },
-    hydrate(snapshot) {
+    hydrate(snapshot, { resetCursor = false } = {}) {
       const sequence = Number(snapshot?.event_sequence || 0)
+      const epoch = snapshot?.event_epoch || ''
+      const changedEpoch = epoch !== this.eventEpoch
+      const rebase = changedEpoch || resetCursor
       // HTTP 查询可能比正在接收的事件更旧，不能回退连接、占用和 Runtime 状态。
-      if (sequence < this.lastEventSequence) {
+      if (!rebase && sequence < this.lastEventSequence) {
         this.snapshotStatus = 'ready'
         return false
       }
@@ -113,13 +116,13 @@ export const useDeviceStore = defineStore('devices', {
       this.robots = Array.isArray(snapshot?.robots)
         ? snapshot.robots
             .map((robot) => {
-              const current = previous.get(robot.robot_id)
+              const current = rebase ? null : previous.get(robot.robot_id)
               const next = normalizeRobot(
                 Number(current?.revision || 0) > Number(robot.revision || 0) ? current : robot
               )
               if (next)
                 next.runtime_instance = selectRuntime(
-                  this.runtimeInstances[robot.robot_id],
+                  rebase ? null : this.runtimeInstances[robot.robot_id],
                   normalizeRobotRuntimeInstance(robot.runtime_instance, robot.robot_id),
                   true
                 )
@@ -134,6 +137,7 @@ export const useDeviceStore = defineStore('devices', {
       )
       this.skillPackages = Array.isArray(snapshot?.skill_packages) ? snapshot.skill_packages : []
       this.lastEventSequence = sequence
+      this.eventEpoch = epoch
       this.lastSnapshotAt = new Date().toISOString()
       this.snapshotStatus = 'ready'
       this.stale = false
